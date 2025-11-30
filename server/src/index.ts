@@ -1,13 +1,14 @@
-import express from 'express';
-import cors from 'cors';
-import { createServer } from 'http';
-import rateLimit from 'express-rate-limit';
+import express from "express";
+import cors from "cors";
+import { createServer } from "http";
+import rateLimit from "express-rate-limit";
 
-import config from './config/index.js';
-import { connectDB } from './config/database.js';
-import { initializeSocket } from './services/socket.js';
-import routes from './routes/index.js';
-import { errorHandler, notFound } from './middleware/errorHandler.js';
+import config from "./config/index.js";
+import { connectDB } from "./config/database.js";
+import { initializeSocket } from "./services/socket.js";
+import routes from "./routes/index.js";
+import { errorHandler, notFound } from "./middleware/errorHandler.js";
+import morgan from "morgan";
 
 const app = express();
 const httpServer = createServer(app);
@@ -16,10 +17,9 @@ const httpServer = createServer(app);
 initializeSocket(httpServer);
 
 // Middleware
-app.use(cors({
-  origin: config.clientUrl,
-  credentials: true,
-}));
+app.use(cors());
+
+app.use(morgan("dev"));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -28,12 +28,15 @@ app.use(express.urlencoded({ extended: true }));
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
-  message: { success: false, error: 'Too many requests, please try again later.' },
+  message: {
+    success: false,
+    error: "Too many requests, please try again later.",
+  },
 });
-app.use('/api', limiter);
+app.use("/api", limiter);
 
 // Routes
-app.use('/api', routes);
+app.use("/api", routes);
 
 // Error handling
 app.use(notFound);
@@ -45,10 +48,12 @@ const startServer = async () => {
     await connectDB();
 
     httpServer.listen(config.port, () => {
-      console.log(`Server running on port ${config.port} in ${config.nodeEnv} mode`);
+      console.log(
+        `Server running on port ${config.port} in ${config.nodeEnv} mode`
+      );
     });
   } catch (error) {
-    console.error('Failed to start server:', error);
+    console.error("Failed to start server:", error);
     process.exit(1);
   }
 };
