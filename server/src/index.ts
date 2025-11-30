@@ -13,6 +13,9 @@ import morgan from "morgan";
 const app = express();
 const httpServer = createServer(app);
 
+// Trust proxy for Heroku/reverse proxy deployments
+app.set('trust proxy', 1);
+
 // Initialize socket.io
 initializeSocket(httpServer);
 
