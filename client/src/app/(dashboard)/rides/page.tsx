@@ -173,7 +173,7 @@ export default function RidesPage() {
                   <div>
                     <div className="flex items-center justify-center gap-1">
                       <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                      <span className="text-2xl font-bold">{ride.rating.toFixed(1)}</span>
+                      <span className="text-2xl font-bold">{(ride.rating ?? 0).toFixed(1)}</span>
                     </div>
                     <p className="text-xs text-gray-500">Rating</p>
                   </div>

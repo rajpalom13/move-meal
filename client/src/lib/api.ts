@@ -195,3 +195,38 @@ export const ordersApi = {
   getAll: (token: string, params?: Record<string, string>) =>
     Promise.resolve({ success: true, data: [] }),
 };
+
+// Admin API
+export const adminApi = {
+  getDashboard: (token: string) =>
+    request('/admin/dashboard', { token }),
+
+  getOrderAnalytics: (token: string, params?: { groupBy?: string; startDate?: string; endDate?: string }) => {
+    const query = params ? `?${new URLSearchParams(params as Record<string, string>)}` : '';
+    return request(`/admin/analytics/orders${query}`, { token });
+  },
+
+  getUsers: (token: string, params?: Record<string, string>) => {
+    const query = params ? `?${new URLSearchParams(params)}` : '';
+    return request(`/admin/users${query}`, { token });
+  },
+
+  getVendors: (token: string, params?: Record<string, string>) => {
+    const query = params ? `?${new URLSearchParams(params)}` : '';
+    return request(`/admin/vendors${query}`, { token });
+  },
+};
+
+// Vendors API
+export const vendorsApi = {
+  getAll: (params?: Record<string, string>) => {
+    const query = params ? `?${new URLSearchParams(params)}` : '';
+    return request(`/vendors${query}`);
+  },
+
+  getOne: (id: string) =>
+    request(`/vendors/${id}`),
+
+  getMenu: (id: string) =>
+    request(`/vendors/${id}/menu`),
+};

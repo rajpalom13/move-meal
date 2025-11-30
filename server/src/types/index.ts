@@ -1,6 +1,9 @@
 import { Request } from 'express';
 import { Document, Types } from 'mongoose';
 
+// User Role
+export type UserRole = 'user' | 'admin' | 'vendor' | 'rider';
+
 // User types
 export interface IUser extends Document {
   _id: Types.ObjectId;
@@ -11,11 +14,16 @@ export interface IUser extends Document {
   college?: string;
   avatar?: string;
   isVerified: boolean;
+  role: UserRole;
   gender?: 'male' | 'female' | 'other';
   location?: {
     type: 'Point';
     coordinates: [number, number];
     address?: string;
+  };
+  preferences?: {
+    cuisines?: string[];
+    dietaryRestrictions?: string[];
   };
   createdAt: Date;
   updatedAt: Date;
@@ -32,6 +40,58 @@ export interface IOTP extends Document {
   createdAt: Date;
 }
 
+// ============ CLUSTER TYPES ============
+
+export type ClusterStatus = 'forming' | 'active' | 'locked' | 'delivering' | 'completed' | 'cancelled' | 'open' | 'filled' | 'ordered' | 'ready';
+
+export interface IClusterMember {
+  user: Types.ObjectId;
+  orderAmount?: number;
+  joinedAt: Date;
+}
+
+export interface ICluster extends Document {
+  _id: Types.ObjectId;
+  name: string;
+  title?: string;
+  creator: Types.ObjectId;
+  vendor?: Types.ObjectId;
+  members: any[];
+  maxMembers: number;
+  currentTotal?: number;
+  minimumBasket?: number;
+  location?: {
+    type: 'Point';
+    coordinates: [number, number];
+    address: string;
+  };
+  deliveryLocation: {
+    type: 'Point';
+    coordinates: [number, number];
+    address: string;
+  };
+  scheduledTime?: Date;
+  status: ClusterStatus;
+  notes?: string;
+  orders?: Types.ObjectId[];
+  totalAmount?: number;
+  deliveryFee?: number;
+  rider?: Types.ObjectId;
+  aiSuggested?: boolean;
+  aiScore?: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ClusterRecommendation {
+  clusterId?: string;
+  score: number;
+  reasons: string[];
+  estimatedSavings: number;
+  estimatedDeliveryTime: number;
+  matchingPreferences: string[];
+}
+
 // ============ FOOD CLUSTER TYPES ============
 
 export type FoodClusterStatus = 'open' | 'filled' | 'ordered' | 'ready' | 'collecting' | 'completed' | 'cancelled';
@@ -39,11 +99,11 @@ export type FoodClusterStatus = 'open' | 'filled' | 'ordered' | 'ready' | 'colle
 export interface IFoodClusterMember {
   user: Types.ObjectId;
   orderAmount: number;
-  items: string; // Description of what they want to order
+  items: string;
   joinedAt: Date;
-  collectionOtp?: string; // Unique OTP for collection verification
-  hasCollected: boolean; // Whether this member has collected their order
-  collectedAt?: Date; // When they collected
+  collectionOtp?: string;
+  hasCollected: boolean;
+  collectedAt?: Date;
 }
 
 export interface IFoodCluster extends Document {
@@ -52,8 +112,8 @@ export interface IFoodCluster extends Document {
   creator: Types.ObjectId;
   restaurant: string;
   restaurantAddress?: string;
-  minimumBasket: number; // e.g., 250
-  currentTotal: number; // Sum of all member order amounts
+  minimumBasket: number;
+  currentTotal: number;
   members: IFoodClusterMember[];
   maxMembers: number;
   deliveryLocation: {
@@ -61,7 +121,7 @@ export interface IFoodCluster extends Document {
     coordinates: [number, number];
     address: string;
   };
-  deliveryTime?: Date; // Preferred delivery time
+  deliveryTime?: Date;
   status: FoodClusterStatus;
   notes?: string;
   createdAt: Date;
@@ -78,8 +138,8 @@ export interface IRideStop {
     coordinates: [number, number];
   };
   address: string;
-  order: number; // Stop order in route
-  user?: Types.ObjectId; // Which user gets picked up here
+  order: number;
+  user?: Types.ObjectId;
 }
 
 export interface IRideClusterMember {
@@ -106,10 +166,10 @@ export interface IRideCluster extends Document {
     coordinates: [number, number];
     address: string;
   };
-  stops: IRideStop[]; // Intermediate pickup points
+  stops: IRideStop[];
   members: IRideClusterMember[];
-  seatsRequired: number; // Total seats needed
-  seatsAvailable: number; // Seats still available
+  seatsRequired: number;
+  seatsAvailable: number;
   totalFare: number;
   farePerPerson: number;
   departureTime: Date;
@@ -117,6 +177,115 @@ export interface IRideCluster extends Document {
   femaleOnly: boolean;
   status: RideClusterStatus;
   notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ============ VENDOR TYPES ============
+
+export interface IMenuItem extends Document {
+  _id: Types.ObjectId;
+  vendor: Types.ObjectId;
+  name: string;
+  description?: string;
+  price: number;
+  category: string;
+  image?: string;
+  isAvailable: boolean;
+  dietary?: string[];
+  preparationTime?: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IVendor extends Document {
+  _id: Types.ObjectId;
+  user: Types.ObjectId;
+  businessName: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  description?: string;
+  address?: string;
+  location: {
+    type: 'Point';
+    coordinates: [number, number];
+    address?: string;
+  };
+  cuisineTypes: string[];
+  rating: number;
+  totalRatings?: number;
+  isOpen?: boolean;
+  isActive?: boolean;
+  operatingHours?: Array<{
+    day: number;
+    open: string;
+    close: string;
+  }>;
+  menu?: Types.ObjectId[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ============ ORDER TYPES ============
+
+export interface IOrderItem {
+  menuItem: Types.ObjectId;
+  name: string;
+  price: number;
+  quantity: number;
+  specialInstructions?: string;
+}
+
+export interface IOrder extends Document {
+  _id: Types.ObjectId;
+  user: Types.ObjectId;
+  cluster?: Types.ObjectId;
+  vendor: Types.ObjectId;
+  items: IOrderItem[];
+  totalAmount: number;
+  status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivering' | 'delivered' | 'cancelled';
+  deliveryAddress?: string;
+  deliveryLocation?: {
+    type: 'Point';
+    coordinates: [number, number];
+  };
+  senderOTP?: string;
+  receiverOTP?: string;
+  senderVerified?: boolean;
+  receiverVerified?: boolean;
+  deliveredAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ============ RIDE TYPES ============
+
+export interface IRide extends Document {
+  _id: Types.ObjectId;
+  rider: Types.ObjectId;
+  driver?: Types.ObjectId;
+  passengers?: Types.ObjectId[];
+  currentLocation?: {
+    type: 'Point';
+    coordinates: [number, number];
+  };
+  startPoint?: {
+    type: 'Point';
+    coordinates: [number, number];
+    address: string;
+  };
+  endPoint?: {
+    type: 'Point';
+    coordinates: [number, number];
+    address: string;
+  };
+  assignedCluster?: Types.ObjectId;
+  vehicleType?: 'bike' | 'scooter' | 'car';
+  fare?: number;
+  rating?: number;
+  totalDeliveries?: number;
+  status: 'available' | 'assigned' | 'in_progress' | 'completed' | 'pending' | 'accepted' | 'cancelled';
   createdAt: Date;
   updatedAt: Date;
 }

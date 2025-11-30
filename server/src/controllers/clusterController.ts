@@ -225,7 +225,7 @@ export const joinCluster = async (req: AuthRequest, res: Response): Promise<void
     notifyMemberJoined(id, { id: userId, name: user.name, avatar: user.avatar });
 
     // Send email to cluster creator
-    const creator = cluster.creator as { email: string; name: string };
+    const creator = cluster.creator as unknown as { email: string; name: string };
     await sendClusterJoinNotification(creator.email, cluster.name, user.name);
 
     await cluster.populate('members', 'name avatar');

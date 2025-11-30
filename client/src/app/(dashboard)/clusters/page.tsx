@@ -54,7 +54,7 @@ export default function ClustersPage() {
 
   const displayClusters = activeTab === 'my' ? myClusters : clusters;
   const filteredClusters = displayClusters.filter((cluster) =>
-    cluster.name.toLowerCase().includes(search.toLowerCase()) ||
+    (cluster.name ?? cluster.title ?? '').toLowerCase().includes(search.toLowerCase()) ||
     cluster.vendor?.businessName?.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -167,7 +167,7 @@ export default function ClustersPage() {
                         key={idx}
                         className="h-6 w-6 rounded-full bg-orange-100 border-2 border-white flex items-center justify-center text-xs font-medium text-orange-600"
                       >
-                        {member.name?.charAt(0)}
+                        {member.user?.name?.charAt(0)}
                       </div>
                     ))}
                     {cluster.members.length > 3 && (
@@ -201,7 +201,7 @@ export default function ClustersPage() {
                   <div className="text-right">
                     <p className="text-xs text-gray-500">Delivery Fee</p>
                     <p className="font-semibold text-green-600">
-                      {formatCurrency(cluster.deliveryFee / cluster.members.length)} each
+                      {formatCurrency((cluster.deliveryFee ?? 0) / (cluster.members?.length || 1))} each
                     </p>
                   </div>
                 </div>

@@ -43,6 +43,15 @@ const userSchema = new Schema<IUser>(
       type: String,
       enum: ['male', 'female', 'other'],
     },
+    role: {
+      type: String,
+      enum: ['user', 'admin', 'vendor'],
+      default: 'user',
+    },
+    preferences: {
+      cuisines: [String],
+      dietaryRestrictions: [String],
+    },
     location: {
       type: {
         type: String,

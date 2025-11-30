@@ -5,12 +5,12 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatCurrency(amount: number): string {
+export function formatCurrency(amount: number | undefined | null): string {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
     maximumFractionDigits: 0,
-  }).format(amount);
+  }).format(amount ?? 0);
 }
 
 export function formatDate(date: string | Date): string {
@@ -30,7 +30,8 @@ export function formatDistance(km: number): string {
   return `${km.toFixed(1)}km`;
 }
 
-export function getStatusColor(status: string): string {
+export function getStatusColor(status: string | undefined | null): string {
+  if (!status) return 'bg-gray-100 text-gray-800';
   const colors: Record<string, string> = {
     // Food cluster statuses
     open: 'bg-blue-100 text-blue-800',

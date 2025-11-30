@@ -110,7 +110,7 @@ export default function CreateFoodClusterPage() {
         deliveryLocation: {
           latitude: location.latitude,
           longitude: location.longitude,
-          address: formData.deliveryAddress || location.address || 'Current Location',
+          address: formData.deliveryAddress || 'Current Location',
         },
         deliveryTime: formData.deliveryTime || undefined,
         notes: formData.notes || undefined,

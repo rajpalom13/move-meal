@@ -345,7 +345,7 @@ export const leaveRideCluster = async (req: AuthRequest, res: Response): Promise
     );
 
     // Reopen if was filled
-    if (cluster.status === 'filled') {
+    if (cluster.status as string === 'filled') {
       cluster.status = 'open';
     }
 

@@ -91,7 +91,7 @@ export default function ClusterDetailPage() {
 
   const isCreator = cluster?.creator?._id === user?.id || cluster?.creator?.id === user?.id;
   const isMember = cluster?.members?.some(
-    (m) => m._id === user?.id || m.id === user?.id
+    (m) => m.user?._id === user?.id || m.user?.id === user?.id
   );
 
   const handleJoin = async () => {
@@ -258,18 +258,18 @@ export default function ClusterDetailPage() {
               <div className="space-y-3">
                 {cluster.members?.map((member) => (
                   <div
-                    key={member._id || member.id}
+                    key={member.user?._id || member.user?.id}
                     className="flex items-center gap-3 p-3 border rounded-lg"
                   >
                     <Avatar>
-                      <AvatarImage src={member.avatar} />
+                      <AvatarImage src={member.user?.avatar} />
                       <AvatarFallback className="bg-orange-100 text-orange-600">
-                        {member.name?.charAt(0).toUpperCase()}
+                        {member.user?.name?.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <p className="font-medium">{member.name}</p>
-                      {(member._id === cluster.creator?._id || member.id === cluster.creator?.id) && (
+                      <p className="font-medium">{member.user?.name}</p>
+                      {(member.user?._id === cluster.creator?._id || member.user?.id === cluster.creator?.id) && (
                         <span className="text-xs text-orange-600">Creator</span>
                       )}
                     </div>
@@ -351,7 +351,7 @@ export default function ClusterDetailPage() {
                 <div className="flex justify-between text-green-600">
                   <span>Fee Per Person</span>
                   <span className="font-semibold">
-                    {formatCurrency(cluster.deliveryFee / (cluster.members?.length || 1))}
+                    {formatCurrency((cluster.deliveryFee ?? 0) / (cluster.members?.length || 1))}
                   </span>
                 </div>
               </div>

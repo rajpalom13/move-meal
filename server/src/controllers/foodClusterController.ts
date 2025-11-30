@@ -176,7 +176,7 @@ export const getFoodCluster = async (req: AuthRequest, res: Response): Promise<v
     const userMember = cluster.members.find(m => m.user._id.toString() === userId.toString());
 
     // Only show OTP to the member themselves, not to others
-    const membersWithOtp = clusterObj.members.map((member: Record<string, unknown>) => {
+    const membersWithOtp = clusterObj.members.map((member: any) => {
       const memberUserId = (member.user as Record<string, unknown>)?._id?.toString();
       if (memberUserId === userId.toString()) {
         return member; // Include OTP for current user

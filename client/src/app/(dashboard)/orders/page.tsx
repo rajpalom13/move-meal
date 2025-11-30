@@ -105,7 +105,7 @@ export default function OrdersPage() {
                     <div>
                       <h3 className="font-semibold">{order.vendor?.businessName || 'Restaurant'}</h3>
                       <p className="text-sm text-gray-600">
-                        {order.items.length} items - {formatDate(order.createdAt)}
+                        {(order.items?.length ?? 0)} items - {formatDate(order.createdAt)}
                       </p>
                     </div>
                   </div>
@@ -128,14 +128,14 @@ export default function OrdersPage() {
                 {/* Order Items Preview */}
                 <div className="mt-4 pt-4 border-t">
                   <div className="flex flex-wrap gap-2">
-                    {order.items.slice(0, 3).map((item, idx) => (
+                    {(order.items ?? []).slice(0, 3).map((item, idx) => (
                       <span key={idx} className="text-sm bg-gray-100 px-2 py-1 rounded">
                         {item.quantity}x {item.name}
                       </span>
                     ))}
-                    {order.items.length > 3 && (
+                    {(order.items?.length ?? 0) > 3 && (
                       <span className="text-sm text-gray-500">
-                        +{order.items.length - 3} more
+                        +{(order.items?.length ?? 0) - 3} more
                       </span>
                     )}
                   </div>
