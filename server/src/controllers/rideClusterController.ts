@@ -355,11 +355,6 @@ export const leaveRideCluster = async (req: AuthRequest, res: Response): Promise
       (stop) => !stop.user || stop.user.toString() !== userId.toString()
     );
 
-    // Reopen if was filled
-    if (cluster.status === 'filled') {
-      cluster.status = 'open';
-    }
-
     await cluster.save();
 
     res.json({
