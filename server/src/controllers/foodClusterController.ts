@@ -409,16 +409,17 @@ export const updateFoodClusterStatus = async (req: AuthRequest, res: Response): 
 
     // When transitioning to "ready", generate OTPs for all members except creator
     if (status === 'ready') {
-      cluster.members = cluster.members.map(member => {
+      cluster.members.forEach((member, index) => {
         const isCreator = member.user.toString() === cluster.creator.toString();
-        return {
-          ...member,
+        if (isCreator) {
           // Creator doesn't need OTP - they're distributing the orders
-          collectionOtp: isCreator ? undefined : generateOTP(),
-          // Auto-mark creator as collected since they have the order
-          hasCollected: isCreator,
-          collectedAt: isCreator ? new Date() : undefined,
-        };
+          cluster.members[index].hasCollected = true;
+          cluster.members[index].collectedAt = new Date();
+        } else {
+          // Generate OTP for non-creators
+          cluster.members[index].collectionOtp = generateOTP();
+          cluster.members[index].hasCollected = false;
+        }
       });
     }
 

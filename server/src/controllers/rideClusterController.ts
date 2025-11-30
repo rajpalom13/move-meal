@@ -263,6 +263,14 @@ export const joinRideCluster = async (req: AuthRequest, res: Response): Promise<
       joinedAt: new Date(),
     });
 
+    // Decrement available seats
+    cluster.seatsAvailable -= 1;
+
+    // Auto-update status when filled
+    if (cluster.seatsAvailable <= 0 && cluster.status === 'open') {
+      cluster.status = 'filled';
+    }
+
     // Add pickup point to stops
     cluster.stops.push({
       location: {
@@ -339,13 +347,16 @@ export const leaveRideCluster = async (req: AuthRequest, res: Response): Promise
     // Remove member
     cluster.members.splice(memberIndex, 1);
 
+    // Increment available seats
+    cluster.seatsAvailable += 1;
+
     // Remove their stop
     cluster.stops = cluster.stops.filter(
       (stop) => !stop.user || stop.user.toString() !== userId.toString()
     );
 
     // Reopen if was filled
-    if (cluster.status as string === 'filled') {
+    if (cluster.status === 'filled') {
       cluster.status = 'open';
     }
 

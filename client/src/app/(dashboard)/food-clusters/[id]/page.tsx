@@ -389,6 +389,17 @@ export default function FoodClusterDetailPage() {
                 Start Collection
               </Button>
             )}
+            {isCreator && cluster.status === 'collecting' && (
+              <Button
+                onClick={() => handleStatusUpdate('completed')}
+                disabled={actionLoading || collectedCount < totalMembers}
+                className="flex-1 bg-emerald-500 hover:bg-emerald-600"
+              >
+                {collectedCount < totalMembers
+                  ? `${collectedCount}/${totalMembers} collected`
+                  : 'Mark Completed'}
+              </Button>
+            )}
           </div>
         </div>
       </div>

@@ -283,12 +283,13 @@ export default function RideClusterDetailPage() {
               </Button>
             )}
 
-            {isCreator && ride.status === 'open' && (
+            {isCreator && (ride.status === 'open' || ride.status === 'filled') && (
               <>
                 <Button
                   onClick={() => handleStatusUpdate('in_progress')}
                   disabled={actionLoading}
                 >
+                  {actionLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                   Start Ride
                 </Button>
                 <Button variant="destructive" onClick={handleCancel} disabled={actionLoading}>
@@ -299,6 +300,7 @@ export default function RideClusterDetailPage() {
 
             {isCreator && ride.status === 'in_progress' && (
               <Button onClick={() => handleStatusUpdate('completed')} disabled={actionLoading}>
+                {actionLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                 Complete Ride
               </Button>
             )}

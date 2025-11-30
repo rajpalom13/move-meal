@@ -11,7 +11,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { isAuthenticated, _hasHydrated, token, user } = useAuthStore();
+  const { isAuthenticated, _hasHydrated, token, user, initializeSocket } = useAuthStore();
 
   useEffect(() => {
     // Wait for hydration to complete before checking auth
@@ -20,8 +20,11 @@ export default function DashboardLayout({
     // If no token after hydration, redirect to login
     if (!token || !isAuthenticated) {
       router.push('/auth/login');
+    } else {
+      // Initialize socket connection after hydration if authenticated
+      initializeSocket();
     }
-  }, [_hasHydrated, token, isAuthenticated, router]);
+  }, [_hasHydrated, token, isAuthenticated, router, initializeSocket]);
 
   // Show loading while hydrating
   if (!_hasHydrated) {

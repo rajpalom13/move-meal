@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -24,6 +25,7 @@ import {
 } from 'lucide-react';
 
 export default function ProfilePage() {
+  const router = useRouter();
   const { user, token, updateUser, logout } = useAuthStore();
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -32,6 +34,11 @@ export default function ProfilePage() {
     college: user?.college || '',
   });
   const [saving, setSaving] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    router.push('/auth/login');
+  };
 
   const handleSave = async () => {
     if (!token) return;
@@ -273,7 +280,7 @@ export default function ProfilePage() {
 
       {/* Logout */}
       <button
-        onClick={logout}
+        onClick={handleLogout}
         className="w-full bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-4 hover:bg-red-50 hover:border-red-200 transition-all duration-300 group animate-fade-in-up"
         style={{ animationDelay: '0.2s' }}
       >

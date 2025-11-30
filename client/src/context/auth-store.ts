@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { User } from '@/types';
 import { authApi } from '@/lib/api';
-import { initSocket, disconnectSocket } from '@/lib/socket';
+import { initSocket, disconnectSocket, getSocket } from '@/lib/socket';
 
 interface AuthState {
   user: User | null;
@@ -19,6 +19,7 @@ interface AuthState {
   updateLocation: (latitude: number, longitude: number, address?: string) => Promise<void>;
   fetchUser: () => Promise<void>;
   setHasHydrated: (state: boolean) => void;
+  initializeSocket: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -156,6 +157,13 @@ export const useAuthStore = create<AuthState>()(
           set({ user: response.data, isAuthenticated: true, isLoading: false });
         } catch {
           set({ user: null, token: null, isAuthenticated: false, isLoading: false });
+        }
+      },
+
+      initializeSocket: () => {
+        const { token, isAuthenticated } = get();
+        if (token && isAuthenticated && !getSocket()) {
+          initSocket(token);
         }
       },
     }),
