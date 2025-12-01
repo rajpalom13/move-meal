@@ -1,6 +1,4 @@
-import { Request as ExpressRequest } from 'express';
-import { ParamsDictionary } from 'express-serve-static-core';
-import { ParsedQs } from 'qs';
+import { Request } from 'express';
 import { Document, Types } from 'mongoose';
 
 // User Role
@@ -293,9 +291,9 @@ export interface IRide extends Document {
 }
 
 // Extended Request with user
-export interface AuthRequest extends ExpressRequest<ParamsDictionary, unknown, unknown, ParsedQs> {
+export type AuthRequest = Request & {
   user?: IUser;
-}
+};
 
 // API Response types
 export interface ApiResponse<T = unknown> {
