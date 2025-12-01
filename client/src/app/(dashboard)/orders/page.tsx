@@ -50,11 +50,11 @@ export default function OrdersPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">My Orders</h1>
-        <p className="text-gray-600 mt-1">Track and manage your food orders</p>
+        <h1 className="text-2xl font-bold text-carbon-900">My Orders</h1>
+        <p className="text-carbon-500 mt-1">Track and manage your food orders</p>
       </div>
 
       {/* Filters */}
@@ -62,10 +62,10 @@ export default function OrdersPage() {
         {statusFilters.map((status) => (
           <button
             key={status.value}
-            className={`px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition ${
+            className={`px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-all duration-200 ${
               filter === status.value
-                ? 'bg-orange-500 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                ? 'bg-coral text-white'
+                : 'bg-cream-100 text-carbon-500 hover:bg-cream-200 hover:text-carbon-700'
             }`}
             onClick={() => setFilter(status.value)}
           >
@@ -77,34 +77,34 @@ export default function OrdersPage() {
       {/* Orders List */}
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin h-8 w-8 border-4 border-orange-500 border-t-transparent rounded-full" />
+          <div className="animate-spin h-8 w-8 border-3 border-coral border-t-transparent rounded-full" />
         </div>
       ) : orders.length === 0 ? (
-        <Card>
+        <Card className="border-0 shadow-sm">
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <ShoppingBag className="h-12 w-12 text-gray-300 mb-4" />
-            <p className="text-gray-500 text-lg">No orders found</p>
-            <p className="text-gray-400 text-sm mt-1">
+            <ShoppingBag className="h-12 w-12 text-carbon-300 mb-4" />
+            <p className="text-carbon-700 text-lg">No orders found</p>
+            <p className="text-carbon-400 text-sm mt-1">
               Start by joining a cluster and placing an order
             </p>
-            <Link href="/clusters" className="mt-4">
+            <Link href="/food-clusters" className="mt-4">
               <Button>Browse Clusters</Button>
             </Link>
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4 stagger-children">
           {orders.map((order) => (
-            <Card key={order._id} className="hover:shadow-md transition-shadow">
+            <Card key={order._id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-lg bg-orange-100 flex items-center justify-center">
-                      <ShoppingBag className="h-6 w-6 text-orange-500" />
+                    <div className="h-12 w-12 rounded-lg bg-coral/10 flex items-center justify-center">
+                      <ShoppingBag className="h-6 w-6 text-coral" />
                     </div>
                     <div>
-                      <h3 className="font-semibold">{order.vendor?.businessName || 'Restaurant'}</h3>
-                      <p className="text-sm text-gray-600">
+                      <h3 className="font-semibold text-carbon-900">{order.vendor?.businessName || 'Restaurant'}</h3>
+                      <p className="text-sm text-carbon-500">
                         {(order.items?.length ?? 0)} items - {formatDate(order.createdAt)}
                       </p>
                     </div>
@@ -112,7 +112,7 @@ export default function OrdersPage() {
 
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                      <p className="font-semibold">{formatCurrency(order.totalAmount)}</p>
+                      <p className="font-semibold text-carbon-900">{formatCurrency(order.totalAmount)}</p>
                       <Badge className={getStatusColor(order.status)}>
                         {order.status}
                       </Badge>
@@ -126,15 +126,15 @@ export default function OrdersPage() {
                 </div>
 
                 {/* Order Items Preview */}
-                <div className="mt-4 pt-4 border-t">
+                <div className="mt-4 pt-4 border-t border-cream-200">
                   <div className="flex flex-wrap gap-2">
                     {(order.items ?? []).slice(0, 3).map((item, idx) => (
-                      <span key={idx} className="text-sm bg-gray-100 px-2 py-1 rounded">
+                      <span key={idx} className="text-sm bg-cream-100 text-carbon-700 px-2 py-1 rounded">
                         {item.quantity}x {item.name}
                       </span>
                     ))}
                     {(order.items?.length ?? 0) > 3 && (
-                      <span className="text-sm text-gray-500">
+                      <span className="text-sm text-carbon-400">
                         +{(order.items?.length ?? 0) - 3} more
                       </span>
                     )}
@@ -143,8 +143,8 @@ export default function OrdersPage() {
 
                 {/* Cluster Info */}
                 {order.cluster && (
-                  <div className="mt-3 p-3 bg-orange-50 rounded-lg">
-                    <p className="text-sm text-orange-700">
+                  <div className="mt-3 p-3 bg-sage-50 rounded-lg">
+                    <p className="text-sm text-sage-700">
                       Part of cluster: <span className="font-medium">{order.cluster.name}</span>
                     </p>
                   </div>
@@ -152,8 +152,8 @@ export default function OrdersPage() {
 
                 {/* OTP Verification Status */}
                 {order.status === 'delivering' && (
-                  <div className="mt-3 p-3 bg-yellow-50 rounded-lg">
-                    <p className="text-sm text-yellow-700">
+                  <div className="mt-3 p-3 bg-coral/10 rounded-lg">
+                    <p className="text-sm text-coral">
                       Verification: Sender {order.senderVerified ? 'verified' : 'pending'} |
                       Receiver {order.receiverVerified ? 'verified' : 'pending'}
                     </p>

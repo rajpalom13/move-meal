@@ -25,13 +25,13 @@ import {
 } from 'lucide-react';
 
 const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
-  open: { label: 'Open', color: 'text-emerald-700', bg: 'bg-emerald-50' },
-  filled: { label: 'Full', color: 'text-blue-700', bg: 'bg-blue-50' },
-  ordered: { label: 'Ordered', color: 'text-amber-700', bg: 'bg-amber-50' },
-  ready: { label: 'Ready', color: 'text-purple-700', bg: 'bg-purple-50' },
-  collecting: { label: 'Collecting', color: 'text-orange-700', bg: 'bg-orange-50' },
-  completed: { label: 'Done', color: 'text-gray-600', bg: 'bg-gray-100' },
-  cancelled: { label: 'Cancelled', color: 'text-red-700', bg: 'bg-red-50' },
+  open: { label: 'Open', color: 'text-sage-700', bg: 'bg-sage-100' },
+  filled: { label: 'Full', color: 'text-sage-700', bg: 'bg-sage-100' },
+  ordered: { label: 'Ordered', color: 'text-coral', bg: 'bg-coral/10' },
+  ready: { label: 'Ready', color: 'text-sage-700', bg: 'bg-sage-100' },
+  collecting: { label: 'Collecting', color: 'text-coral', bg: 'bg-coral/10' },
+  completed: { label: 'Done', color: 'text-carbon-600', bg: 'bg-cream-100' },
+  cancelled: { label: 'Cancelled', color: 'text-coral', bg: 'bg-coral/10' },
 };
 
 interface Recommendation {
@@ -100,18 +100,18 @@ export default function FoodClustersPage() {
 
     return (
       <Link href={`/food-clusters/${cluster._id}`}>
-        <div className={`bg-white rounded-xl border p-4 hover:shadow-md transition-all group ${
-          isRecommended ? 'border-orange-200 ring-1 ring-orange-100' : 'border-gray-100 hover:border-gray-200'
+        <div className={`bg-white rounded-xl border p-4 hover:shadow-sm transition-all duration-200 group ${
+          isRecommended ? 'border-coral/30 ring-1 ring-coral/10' : 'border-cream-200 hover:border-sage/50'
         }`}>
           {/* Recommendation Badge */}
           {isRecommended && recommendation && (
-            <div className="flex items-center gap-2 mb-3 pb-3 border-b border-orange-100">
-              <div className="flex items-center gap-1.5 px-2 py-1 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-xs font-medium rounded-full">
+            <div className="flex items-center gap-2 mb-3 pb-3 border-b border-coral/10">
+              <div className="flex items-center gap-1.5 px-2 py-1 bg-coral text-white text-xs font-medium rounded-full">
                 <Zap className="h-3 w-3" />
                 {recommendation.score}% match
               </div>
               {recommendation.joinReasons?.slice(0, 2).map((reason, i) => (
-                <span key={i} className="text-xs text-orange-700 bg-orange-50 px-2 py-1 rounded-full">
+                <span key={i} className="text-xs text-coral bg-coral/10 px-2 py-1 rounded-full">
                   {reason}
                 </span>
               ))}
@@ -120,12 +120,12 @@ export default function FoodClustersPage() {
 
           <div className="flex items-start gap-4">
             {/* Restaurant Icon */}
-            <div className={`h-12 w-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
+            <div className={`h-12 w-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
               isRecommended
-                ? 'bg-gradient-to-br from-orange-500 to-amber-500'
-                : 'bg-gradient-to-br from-orange-100 to-amber-100'
+                ? 'bg-coral'
+                : 'bg-coral/10'
             }`}>
-              <Store className={`h-6 w-6 ${isRecommended ? 'text-white' : 'text-orange-600'}`} />
+              <Store className={`h-6 w-6 ${isRecommended ? 'text-white' : 'text-coral'}`} />
             </div>
 
             {/* Content */}
@@ -133,14 +133,14 @@ export default function FoodClustersPage() {
               <div className="flex items-start justify-between gap-2 mb-1">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-gray-900 truncate">{cluster.title}</h3>
+                    <h3 className="font-semibold text-carbon-900 truncate group-hover:text-coral transition-colors">{cluster.title}</h3>
                     {isMyCluster && (
-                      <span className="text-xs px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded flex-shrink-0">
+                      <span className="text-xs px-1.5 py-0.5 bg-coral/10 text-coral rounded flex-shrink-0">
                         Yours
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-gray-600">{cluster.restaurant}</p>
+                  <p className="text-sm text-carbon-500">{cluster.restaurant}</p>
                 </div>
                 <span className={`text-xs font-medium px-2 py-1 rounded-full flex-shrink-0 ${status.bg} ${status.color}`}>
                   {status.label}
@@ -150,15 +150,15 @@ export default function FoodClustersPage() {
               {/* Progress Bar */}
               <div className="mt-3 mb-2">
                 <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="text-gray-500">
+                  <span className="text-carbon-500">
                     {formatCurrency(cluster.currentTotal)} of {formatCurrency(cluster.minimumBasket)}
                   </span>
-                  <span className="font-medium text-gray-700">{progress}%</span>
+                  <span className="font-medium text-carbon-700">{progress}%</span>
                 </div>
-                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-1.5 bg-cream-100 rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all ${
-                      progress >= 100 ? 'bg-emerald-500' : 'bg-gradient-to-r from-orange-400 to-amber-400'
+                      progress >= 100 ? 'bg-sage' : 'bg-coral'
                     }`}
                     style={{ width: `${progress}%` }}
                   />
@@ -166,7 +166,7 @@ export default function FoodClustersPage() {
               </div>
 
               {/* Meta Info */}
-              <div className="flex items-center gap-4 text-xs text-gray-500">
+              <div className="flex items-center gap-4 text-xs text-carbon-500">
                 <div className="flex items-center gap-1">
                   <Users className="h-3.5 w-3.5" />
                   <span>{cluster.members?.length || 0}/{cluster.maxMembers}</span>
@@ -185,18 +185,18 @@ export default function FoodClustersPage() {
             </div>
 
             {/* Arrow */}
-            <ChevronRight className="h-5 w-5 text-gray-300 group-hover:text-gray-400 transition-colors flex-shrink-0 mt-1" />
+            <ChevronRight className="h-5 w-5 text-carbon-300 group-hover:text-coral transition-colors flex-shrink-0 mt-1" />
           </div>
 
           {/* Creator Footer */}
-          <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2">
+          <div className="mt-3 pt-3 border-t border-cream-200 flex items-center gap-2">
             <Avatar className="h-5 w-5">
               <AvatarImage src={cluster.creator?.avatar} />
-              <AvatarFallback className="text-xs bg-gray-100 text-gray-600">
+              <AvatarFallback className="text-xs bg-sage-100 text-sage-700">
                 {cluster.creator?.name?.charAt(0)}
               </AvatarFallback>
             </Avatar>
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-carbon-500">
               {isMyCluster ? 'You created this' : `by ${cluster.creator?.name}`}
             </span>
           </div>
@@ -206,15 +206,15 @@ export default function FoodClustersPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto animate-fade-in">
       {/* Header */}
       <div className="flex items-start justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Food Clusters</h1>
-          <p className="text-gray-500 mt-1">Pool orders together, save on delivery</p>
+          <h1 className="text-2xl font-bold text-carbon-900">Food Clusters</h1>
+          <p className="text-carbon-500 mt-1">Pool orders together, save on delivery</p>
         </div>
         <Link href="/food-clusters/create">
-          <Button className="bg-orange-500 hover:bg-orange-600 shadow-sm">
+          <Button>
             <Plus className="h-4 w-4 mr-2" />
             New Cluster
           </Button>
@@ -224,21 +224,21 @@ export default function FoodClustersPage() {
       {/* Search and Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-carbon-400" />
           <Input
             placeholder="Search by restaurant..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-white border-gray-200"
+            className="pl-10"
           />
         </div>
-        <div className="flex p-1 bg-gray-100 rounded-lg">
+        <div className="flex p-1 bg-cream-100 rounded-lg">
           <button
             onClick={() => setActiveTab('recommended')}
             className={`px-3 py-2 text-sm font-medium rounded-md transition-all flex items-center gap-1.5 ${
               activeTab === 'recommended'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-white text-carbon-900 shadow-sm'
+                : 'text-carbon-500 hover:text-carbon-700'
             }`}
           >
             <Sparkles className="h-3.5 w-3.5" />
@@ -248,8 +248,8 @@ export default function FoodClustersPage() {
             onClick={() => setActiveTab('all')}
             className={`px-3 py-2 text-sm font-medium rounded-md transition-all ${
               activeTab === 'all'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-white text-carbon-900 shadow-sm'
+                : 'text-carbon-500 hover:text-carbon-700'
             }`}
           >
             Explore
@@ -258,13 +258,13 @@ export default function FoodClustersPage() {
             onClick={() => setActiveTab('my')}
             className={`px-3 py-2 text-sm font-medium rounded-md transition-all ${
               activeTab === 'my'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
+                ? 'bg-white text-carbon-900 shadow-sm'
+                : 'text-carbon-500 hover:text-carbon-700'
             }`}
           >
             Mine
             {myClusters.length > 0 && (
-              <span className="ml-1.5 px-1.5 py-0.5 text-xs bg-orange-100 text-orange-700 rounded-full">
+              <span className="ml-1.5 px-1.5 py-0.5 text-xs bg-coral/10 text-coral rounded-full">
                 {myClusters.length}
               </span>
             )}
@@ -274,13 +274,13 @@ export default function FoodClustersPage() {
 
       {/* Location Notice */}
       {!location.latitude && (
-        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
-            <MapPin className="h-5 w-5 text-amber-600" />
+        <div className="mb-6 p-4 bg-sage-50 border border-sage-200 rounded-xl flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-sage-100 flex items-center justify-center flex-shrink-0">
+            <MapPin className="h-5 w-5 text-sage-600" />
           </div>
           <div>
-            <p className="font-medium text-amber-800">Enable location</p>
-            <p className="text-sm text-amber-700">Get personalized recommendations and see clusters near you</p>
+            <p className="font-medium text-carbon-800">Enable location</p>
+            <p className="text-sm text-carbon-500">Get personalized recommendations and see clusters near you</p>
           </div>
         </div>
       )}
@@ -288,8 +288,8 @@ export default function FoodClustersPage() {
       {/* Loading State */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20">
-          <div className="h-10 w-10 border-3 border-orange-500 border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="text-gray-500">Finding clusters...</p>
+          <div className="h-10 w-10 border-3 border-coral border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="text-carbon-500">Finding clusters...</p>
         </div>
       ) : activeTab === 'recommended' ? (
         /* Recommendations Tab */
@@ -298,15 +298,15 @@ export default function FoodClustersPage() {
           {recommendations.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
+                <div className="h-8 w-8 rounded-lg bg-coral flex items-center justify-center">
                   <TrendingUp className="h-4 w-4 text-white" />
                 </div>
                 <div>
-                  <h2 className="font-semibold text-gray-900">Recommended for you</h2>
-                  <p className="text-xs text-gray-500">Based on your location and preferences</p>
+                  <h2 className="font-semibold text-carbon-900">Recommended for you</h2>
+                  <p className="text-xs text-carbon-500">Based on your location and preferences</p>
                 </div>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-3 stagger-children">
                 {recommendations.map((rec) => (
                   <ClusterCard
                     key={rec.clusterId}
@@ -322,8 +322,8 @@ export default function FoodClustersPage() {
           {/* Other Clusters */}
           {clusters.length > 0 && (
             <div>
-              <h2 className="font-semibold text-gray-900 mb-4">More clusters nearby</h2>
-              <div className="space-y-3">
+              <h2 className="font-semibold text-carbon-900 mb-4">More clusters nearby</h2>
+              <div className="space-y-3 stagger-children">
                 {clusters
                   .filter(c => !recommendations.some(r => r.clusterId === c._id))
                   .slice(0, 10)
@@ -337,15 +337,15 @@ export default function FoodClustersPage() {
           {/* Empty State */}
           {recommendations.length === 0 && clusters.length === 0 && (
             <div className="text-center py-16 px-4">
-              <div className="h-20 w-20 rounded-full bg-orange-50 flex items-center justify-center mx-auto mb-4">
-                <Utensils className="h-10 w-10 text-orange-400" />
+              <div className="h-20 w-20 rounded-xl bg-coral/10 flex items-center justify-center mx-auto mb-4">
+                <Utensils className="h-10 w-10 text-coral/50" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No clusters yet</h3>
-              <p className="text-gray-500 mb-6 max-w-sm mx-auto">
+              <h3 className="text-lg font-semibold text-carbon-900 mb-2">No clusters yet</h3>
+              <p className="text-carbon-500 mb-6 max-w-sm mx-auto">
                 Be the first to create a food cluster in your area
               </p>
               <Link href="/food-clusters/create">
-                <Button className="bg-orange-500 hover:bg-orange-600">
+                <Button>
                   <Sparkles className="h-4 w-4 mr-2" />
                   Create Cluster
                 </Button>
@@ -356,19 +356,19 @@ export default function FoodClustersPage() {
       ) : displayClusters.length === 0 ? (
         /* Empty State */
         <div className="text-center py-16 px-4">
-          <div className="h-20 w-20 rounded-full bg-orange-50 flex items-center justify-center mx-auto mb-4">
-            <Utensils className="h-10 w-10 text-orange-400" />
+          <div className="h-20 w-20 rounded-xl bg-coral/10 flex items-center justify-center mx-auto mb-4">
+            <Utensils className="h-10 w-10 text-coral/50" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          <h3 className="text-lg font-semibold text-carbon-900 mb-2">
             {activeTab === 'my' ? 'No clusters yet' : 'No clusters found'}
           </h3>
-          <p className="text-gray-500 mb-6 max-w-sm mx-auto">
+          <p className="text-carbon-500 mb-6 max-w-sm mx-auto">
             {activeTab === 'my'
               ? "Join an existing cluster or create your own to start saving"
               : 'Be the first to create a food cluster in your area'}
           </p>
           <Link href="/food-clusters/create">
-            <Button className="bg-orange-500 hover:bg-orange-600">
+            <Button>
               <Sparkles className="h-4 w-4 mr-2" />
               Create Cluster
             </Button>
@@ -376,7 +376,7 @@ export default function FoodClustersPage() {
         </div>
       ) : (
         /* Regular Clusters List */
-        <div className="space-y-3">
+        <div className="space-y-3 stagger-children">
           {displayClusters.map((cluster) => (
             <ClusterCard key={cluster._id} cluster={cluster} />
           ))}

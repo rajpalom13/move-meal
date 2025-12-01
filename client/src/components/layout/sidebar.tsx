@@ -32,27 +32,27 @@ export function Sidebar() {
   };
 
   return (
-    <div className="flex flex-col h-full w-64 bg-white border-r">
+    <div className="flex flex-col h-full w-64 bg-white border-r border-cream-200">
       {/* Logo */}
-      <div className="flex items-center gap-2 px-6 py-4 border-b">
-        <div className="h-8 w-8 rounded-full bg-orange-500 flex items-center justify-center">
-          <span className="text-white font-bold">M</span>
+      <div className="flex items-center gap-3 px-6 py-5 border-b border-cream-200">
+        <div className="h-9 w-9 rounded-lg bg-coral flex items-center justify-center">
+          <span className="text-white font-bold text-lg">M</span>
         </div>
-        <span className="text-xl font-bold">MoveNmeal</span>
+        <span className="text-xl font-semibold text-carbon-900">MoveNmeal</span>
       </div>
 
       {/* User Info */}
-      <div className="px-4 py-4 border-b">
-        <div className="flex items-center gap-3">
-          <Avatar>
+      <div className="px-4 py-4 border-b border-cream-200">
+        <div className="flex items-center gap-3 p-2 rounded-lg bg-cream-50">
+          <Avatar className="h-10 w-10">
             <AvatarImage src={user?.avatar} />
-            <AvatarFallback className="bg-orange-100 text-orange-600">
+            <AvatarFallback className="bg-sage-100 text-sage-700 font-medium">
               {user?.name?.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{user?.name}</p>
-            <p className="text-xs text-gray-500">{user?.college || 'Student'}</p>
+            <p className="text-sm font-medium text-carbon-900 truncate">{user?.name}</p>
+            <p className="text-xs text-carbon-500">{user?.college || 'Student'}</p>
           </div>
         </div>
       </div>
@@ -68,10 +68,10 @@ export function Sidebar() {
               key={link.href}
               href={link.href}
               className={cn(
-                'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
                 isActive
-                  ? 'bg-orange-50 text-orange-600'
-                  : 'text-gray-600 hover:bg-gray-50'
+                  ? 'bg-coral/10 text-coral border-l-2 border-coral'
+                  : 'text-carbon-600 hover:bg-cream-100 hover:text-carbon-900'
               )}
             >
               <Icon className="h-5 w-5" />
@@ -82,10 +82,10 @@ export function Sidebar() {
       </nav>
 
       {/* Logout */}
-      <div className="px-3 py-4 border-t">
+      <div className="px-3 py-4 border-t border-cream-200">
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+          className="flex items-center gap-3 px-3 py-2.5 w-full rounded-lg text-sm font-medium text-coral hover:bg-coral/10 transition-all duration-200"
         >
           <LogOut className="h-5 w-5" />
           Logout

@@ -1,9 +1,9 @@
-import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import config from '../config/index.js';
 import { ICluster, IUser, ClusterRecommendation } from '../types/index.js';
 import { calculateDistance } from '../utils/location.js';
 
-const openai = config.openai.apiKey ? new OpenAI({ apiKey: config.openai.apiKey }) : null;
+const genAI = config.gemini.apiKey ? new GoogleGenerativeAI(config.gemini.apiKey) : null;
 
 interface ClusterWithDistance extends Partial<ICluster> {
   distance: number;
@@ -115,34 +115,24 @@ export const suggestNewCluster = async (
     .slice(0, 3)
     .map(([cuisine]) => cuisine);
 
-  // If OpenAI is configured, generate a more intelligent suggestion
-  if (openai && topCuisines.length > 0) {
+  // If Gemini is configured, generate a more intelligent suggestion
+  if (genAI && topCuisines.length > 0) {
     try {
-      const response = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a helpful assistant that suggests food ordering clusters. Keep responses brief and friendly.',
-          },
-          {
-            role: 'user',
-            content: `Based on these popular cuisine preferences: ${topCuisines.join(', ')}, suggest a cluster name and brief description for a group food order. Format: Name | Description`,
-          },
-        ],
-        max_tokens: 100,
-      });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const prompt = `You are a helpful assistant that suggests food ordering clusters. Based on these popular cuisine preferences: ${topCuisines.join(', ')}, suggest a cluster name and brief description for a group food order. Keep it brief and friendly. Format your response exactly as: Name | Description`;
 
-      const suggestion = response.choices[0]?.message?.content ||
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const suggestion = response.text() ||
         `${topCuisines[0]} Lovers | Join fellow ${topCuisines[0]} enthusiasts for a group order!`;
 
       return {
-        suggestion,
+        suggestion: suggestion.trim(),
         potentialMembers: nearbyUsers.length,
         cuisines: topCuisines,
       };
     } catch (error) {
-      console.error('OpenAI API error:', error);
+      console.error('Gemini API error:', error);
     }
   }
 

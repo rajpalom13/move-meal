@@ -57,27 +57,27 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
+    <div className="min-h-screen flex items-center justify-center bg-cream-50 py-12 px-4">
+      <Card className="w-full max-w-md border-0 shadow-sm">
+        <CardHeader className="text-center pb-2">
           <div className="flex justify-center mb-4">
-            <div className="h-12 w-12 rounded-full bg-orange-500 flex items-center justify-center">
+            <div className="h-12 w-12 rounded-lg bg-coral flex items-center justify-center">
               <span className="text-white font-bold text-2xl">M</span>
             </div>
           </div>
-          <CardTitle className="text-2xl">Join MoveNmeal</CardTitle>
-          <CardDescription>Create an account to share rides and food orders with students</CardDescription>
+          <CardTitle className="text-2xl text-carbon-900">Join MoveNmeal</CardTitle>
+          <CardDescription className="text-carbon-500">Create an account to share rides and food orders</CardDescription>
         </CardHeader>
         <CardContent>
           {error && (
-            <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg">
+            <div className="mb-4 p-3 bg-coral/10 text-coral text-sm rounded-lg border border-coral/20">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Full Name *</label>
+              <label className="block text-sm font-medium text-carbon-700 mb-1.5">Full Name *</label>
               <Input
                 name="name"
                 value={formData.name}
@@ -88,7 +88,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Email *</label>
+              <label className="block text-sm font-medium text-carbon-700 mb-1.5">Email *</label>
               <Input
                 type="email"
                 name="email"
@@ -100,7 +100,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Phone Number *</label>
+              <label className="block text-sm font-medium text-carbon-700 mb-1.5">Phone Number *</label>
               <Input
                 type="tel"
                 name="phone"
@@ -112,7 +112,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">College / University</label>
+              <label className="block text-sm font-medium text-carbon-700 mb-1.5">College / University</label>
               <Input
                 name="college"
                 value={formData.college}
@@ -122,25 +122,25 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Gender</label>
+              <label className="block text-sm font-medium text-carbon-700 mb-1.5">Gender</label>
               <select
                 name="gender"
                 value={formData.gender}
                 onChange={handleChange}
-                className="w-full h-10 px-3 rounded-md border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full h-11 px-4 rounded-md border border-cream-200 bg-cream-50/50 text-sm text-carbon-900 transition-all duration-200 focus:border-sage focus:bg-white focus:outline-none focus:ring-2 focus:ring-sage/20"
               >
                 <option value="">Select gender (optional)</option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
                 <option value="other">Other</option>
               </select>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-carbon-500 mt-1.5">
                 Required for female-only ride clusters
               </p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Password *</label>
+              <label className="block text-sm font-medium text-carbon-700 mb-1.5">Password *</label>
               <Input
                 type="password"
                 name="password"
@@ -152,7 +152,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">Confirm Password *</label>
+              <label className="block text-sm font-medium text-carbon-700 mb-1.5">Confirm Password *</label>
               <Input
                 type="password"
                 name="confirmPassword"
@@ -168,18 +168,18 @@ export default function RegisterPage() {
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-gray-600">
+          <div className="mt-6 text-center text-sm text-carbon-500">
             Already have an account?{' '}
-            <Link href="/auth/login" className="text-orange-500 hover:underline font-medium">
+            <Link href="/auth/login" className="text-coral hover:underline font-medium">
               Sign in
             </Link>
           </div>
 
-          <p className="mt-4 text-xs text-center text-gray-500">
+          <p className="mt-4 text-xs text-center text-carbon-400">
             By creating an account, you agree to our{' '}
-            <a href="#" className="text-orange-500 hover:underline">Terms of Service</a>
+            <a href="#" className="text-coral hover:underline">Terms of Service</a>
             {' '}and{' '}
-            <a href="#" className="text-orange-500 hover:underline">Privacy Policy</a>
+            <a href="#" className="text-coral hover:underline">Privacy Policy</a>
           </p>
         </CardContent>
       </Card>

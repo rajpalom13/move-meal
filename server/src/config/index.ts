@@ -31,8 +31,8 @@ export const config = {
     pass: process.env.SMTP_PASS,
   },
 
-  openai: {
-    apiKey: process.env.OPENAI_API_KEY,
+  gemini: {
+    apiKey: process.env.GEMINI_API_KEY,
   },
 
   clientUrl: process.env.CLIENT_URL || 'http://localhost:3000',
