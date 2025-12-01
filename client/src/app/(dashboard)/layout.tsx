@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/layout/sidebar';
 import { useAuthStore } from '@/context/auth-store';
+import { GoogleMapsProvider } from '@/components/maps';
 
 export default function DashboardLayout({
   children,
@@ -45,11 +46,13 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen bg-cream-50">
-      <Sidebar />
-      <main className="flex-1 overflow-y-auto">
-        <div className="p-8">{children}</div>
-      </main>
-    </div>
+    <GoogleMapsProvider>
+      <div className="flex h-screen bg-cream-50">
+        <Sidebar />
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-8">{children}</div>
+        </main>
+      </div>
+    </GoogleMapsProvider>
   );
 }

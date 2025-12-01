@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuthStore } from '@/context/auth-store';
-import { useLocation } from '@/hooks/useLocation';
 import { foodClustersApi } from '@/lib/api';
 import {
   ArrowLeft,
@@ -21,13 +20,21 @@ import {
   ChevronRight,
   Check,
   AlertCircle,
+  Navigation,
 } from 'lucide-react';
 import Link from 'next/link';
+import { LocationPickerMap, PlacesAutocomplete, useGoogleMaps } from '@/components/maps';
+
+interface LocationPoint {
+  latitude: number;
+  longitude: number;
+  address: string;
+}
 
 export default function CreateFoodClusterPage() {
   const router = useRouter();
   const { token } = useAuthStore();
-  const location = useLocation();
+  const { isLoaded } = useGoogleMaps();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -39,32 +46,52 @@ export default function CreateFoodClusterPage() {
     minimumBasket: number;
   } | null>(null);
 
+  // Location state
+  const [deliveryLocation, setDeliveryLocation] = useState<LocationPoint | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
+
   const [formData, setFormData] = useState({
     title: '',
     restaurant: '',
     restaurantAddress: '',
     minimumBasket: '',
     maxMembers: '10',
-    deliveryAddress: '',
     deliveryTime: '',
     notes: '',
     orderAmount: '',
     items: '',
   });
 
+  // Get current location for API calls
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCurrentLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+        }
+      );
+    }
+  }, []);
+
   // Fetch AI suggestion
   useEffect(() => {
     const fetchSuggestion = async () => {
-      if (!token || !location.latitude || !location.longitude) return;
+      if (!token || !currentLocation) return;
       try {
-        const res = await foodClustersApi.getSuggestion(token, location.latitude, location.longitude);
+        const res = await foodClustersApi.getSuggestion(token, currentLocation.lat, currentLocation.lng);
         setSuggestion((res as { data: typeof suggestion }).data);
       } catch (err) {
         console.error('Failed to get suggestion:', err);
       }
     };
     fetchSuggestion();
-  }, [token, location.latitude, location.longitude]);
+  }, [token, currentLocation]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -92,8 +119,8 @@ export default function CreateFoodClusterPage() {
       return;
     }
 
-    if (!location.latitude || !location.longitude) {
-      setError('Location is required. Please enable location services.');
+    if (!deliveryLocation) {
+      setError('Please select a delivery location');
       return;
     }
 
@@ -108,9 +135,9 @@ export default function CreateFoodClusterPage() {
         minimumBasket: parseFloat(formData.minimumBasket),
         maxMembers: parseInt(formData.maxMembers) || 10,
         deliveryLocation: {
-          latitude: location.latitude,
-          longitude: location.longitude,
-          address: formData.deliveryAddress || 'Current Location',
+          latitude: deliveryLocation.latitude,
+          longitude: deliveryLocation.longitude,
+          address: deliveryLocation.address,
         },
         deliveryTime: formData.deliveryTime || undefined,
         notes: formData.notes || undefined,
@@ -137,7 +164,7 @@ export default function CreateFoodClusterPage() {
       return formData.title && formData.restaurant && formData.minimumBasket;
     }
     if (currentStep === 2) {
-      return formData.deliveryAddress;
+      return deliveryLocation !== null;
     }
     return true;
   };
@@ -319,24 +346,49 @@ export default function CreateFoodClusterPage() {
           {/* Step 2: Delivery Details */}
           {currentStep === 2 && (
             <div className="p-6 space-y-5 animate-fade-in">
+              {/* Interactive Map */}
+              {isLoaded && (
+                <div className="rounded-lg overflow-hidden border border-gray-200">
+                  <LocationPickerMap
+                    mode="single"
+                    currentLocation={deliveryLocation ? { lat: deliveryLocation.latitude, lng: deliveryLocation.longitude } : undefined}
+                    onLocationSelect={(location) => {
+                      setDeliveryLocation({
+                        latitude: location.lat,
+                        longitude: location.lng,
+                        address: location.address || 'Selected location',
+                      });
+                    }}
+                    height="250px"
+                    showCurrentLocationButton
+                  />
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Delivery / Pickup Location
                 </label>
                 <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <Input
-                    name="deliveryAddress"
+                  <MapPin className="absolute left-3 top-3 h-5 w-5 text-coral z-10" />
+                  <PlacesAutocomplete
                     placeholder="e.g., College Main Gate"
-                    value={formData.deliveryAddress}
-                    onChange={handleChange}
+                    value={deliveryLocation?.address || ''}
+                    onSelect={(location) => {
+                      setDeliveryLocation({
+                        latitude: location.lat,
+                        longitude: location.lng,
+                        address: location.address,
+                      });
+                    }}
                     className="h-12 pl-11"
+                    showCurrentLocation
                   />
                 </div>
-                {location.latitude && (
+                {deliveryLocation && (
                   <p className="text-xs text-emerald-600 flex items-center gap-1 mt-2">
-                    <Check className="h-3 w-3" />
-                    Using your current location coordinates
+                    <Navigation className="h-3 w-3" />
+                    {deliveryLocation.address}
                   </p>
                 )}
               </div>

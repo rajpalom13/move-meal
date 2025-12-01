@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,10 +9,21 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { useAuthStore } from '@/context/auth-store';
-import { useLocation } from '@/hooks/useLocation';
 import { rideClustersApi } from '@/lib/api';
-import { ArrowLeft, MapPin, Loader2, Car, Bike, Users, Shield } from 'lucide-react';
+import { ArrowLeft, MapPin, Loader2, Car, Bike, Users, Shield, Plus, X, Navigation } from 'lucide-react';
 import Link from 'next/link';
+import { LocationPickerMap, PlacesAutocomplete, useGoogleMaps } from '@/components/maps';
+
+interface LocationPoint {
+  latitude: number;
+  longitude: number;
+  address: string;
+}
+
+interface Stop {
+  id: string;
+  location: LocationPoint | null;
+}
 
 const vehicleTypes = [
   { value: 'auto', label: 'Auto', icon: Car },
@@ -24,16 +35,19 @@ const vehicleTypes = [
 export default function CreateRideClusterPage() {
   const router = useRouter();
   const { token, user } = useAuthStore();
-  const location = useLocation();
+  const { isLoaded } = useGoogleMaps();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Location states
+  const [startPoint, setStartPoint] = useState<LocationPoint | null>(null);
+  const [endPoint, setEndPoint] = useState<LocationPoint | null>(null);
+  const [pickupPoint, setPickupPoint] = useState<LocationPoint | null>(null);
+  const [stops, setStops] = useState<Stop[]>([]);
+
   const [formData, setFormData] = useState({
     title: '',
-    startAddress: '',
-    endAddress: '',
-    pickupAddress: '',
     seatsRequired: '4',
     totalFare: '',
     departureTime: '',
@@ -47,18 +61,41 @@ export default function CreateRideClusterPage() {
     setError('');
   };
 
+  // Add a new stop
+  const addStop = useCallback(() => {
+    setStops(prev => [...prev, { id: Date.now().toString(), location: null }]);
+  }, []);
+
+  // Remove a stop
+  const removeStop = useCallback((id: string) => {
+    setStops(prev => prev.filter(stop => stop.id !== id));
+  }, []);
+
+  // Update a stop's location
+  const updateStop = useCallback((id: string, location: LocationPoint | null) => {
+    setStops(prev => prev.map(stop =>
+      stop.id === id ? { ...stop, location } : stop
+    ));
+  }, []);
+
+  // Get all waypoints for the map
+  const getWaypoints = useCallback(() => {
+    const waypoints: Array<{ lat: number; lng: number }> = [];
+    stops.forEach(stop => {
+      if (stop.location) {
+        waypoints.push({ lat: stop.location.latitude, lng: stop.location.longitude });
+      }
+    });
+    return waypoints;
+  }, [stops]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!token) return;
 
-    if (!formData.title || !formData.startAddress || !formData.endAddress || !formData.pickupAddress || !formData.totalFare || !formData.departureTime) {
-      setError('Please fill in all required fields');
-      return;
-    }
-
-    if (!location.latitude || !location.longitude) {
-      setError('Location is required. Please enable location services.');
+    if (!formData.title || !startPoint || !endPoint || !pickupPoint || !formData.totalFare || !formData.departureTime) {
+      setError('Please fill in all required fields including locations');
       return;
     }
 
@@ -72,24 +109,33 @@ export default function CreateRideClusterPage() {
     setError('');
 
     try {
+      // Build stops array for API
+      const validStops = stops
+        .filter(stop => stop.location)
+        .map(stop => ({
+          latitude: stop.location!.latitude,
+          longitude: stop.location!.longitude,
+          address: stop.location!.address,
+        }));
+
       await rideClustersApi.create(token, {
         title: formData.title,
         startPoint: {
-          latitude: location.latitude,
-          longitude: location.longitude,
-          address: formData.startAddress,
+          latitude: startPoint.latitude,
+          longitude: startPoint.longitude,
+          address: startPoint.address,
         },
         endPoint: {
-          // For simplicity, using same coords - in real app would use geocoding
-          latitude: location.latitude + 0.01,
-          longitude: location.longitude + 0.01,
-          address: formData.endAddress,
+          latitude: endPoint.latitude,
+          longitude: endPoint.longitude,
+          address: endPoint.address,
         },
         pickupPoint: {
-          latitude: location.latitude,
-          longitude: location.longitude,
-          address: formData.pickupAddress,
+          latitude: pickupPoint.latitude,
+          longitude: pickupPoint.longitude,
+          address: pickupPoint.address,
         },
+        stops: validStops.length > 0 ? validStops : undefined,
         seatsRequired: parseInt(formData.seatsRequired),
         totalFare: parseFloat(formData.totalFare),
         departureTime: formData.departureTime,
@@ -174,57 +220,151 @@ export default function CreateRideClusterPage() {
             <div className="space-y-4 pt-4 border-t">
               <h3 className="font-medium text-gray-900">Route</h3>
 
+              {/* Interactive Map */}
+              {isLoaded && (
+                <div className="rounded-lg overflow-hidden border border-gray-200">
+                  <LocationPickerMap
+                    mode="route-with-stops"
+                    startLocation={startPoint ? { lat: startPoint.latitude, lng: startPoint.longitude } : undefined}
+                    endLocation={endPoint ? { lat: endPoint.latitude, lng: endPoint.longitude } : undefined}
+                    stops={getWaypoints()}
+                    height="300px"
+                    showCurrentLocationButton
+                  />
+                </div>
+              )}
+
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="startAddress">Start Point *</Label>
+                  <Label>Start Point *</Label>
                   <div className="relative">
-                    <div className="absolute left-3 top-3 w-3 h-3 rounded-full bg-green-500"></div>
-                    <Input
-                      id="startAddress"
-                      name="startAddress"
+                    <div className="absolute left-3 top-3 w-3 h-3 rounded-full bg-green-500 z-10"></div>
+                    <PlacesAutocomplete
                       placeholder="Starting location address"
-                      value={formData.startAddress}
-                      onChange={handleChange}
+                      value={startPoint?.address || ''}
+                      onSelect={(location) => {
+                        setStartPoint({
+                          latitude: location.lat,
+                          longitude: location.lng,
+                          address: location.address,
+                        });
+                      }}
                       className="pl-10"
-                      required
+                      showCurrentLocation
                     />
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="endAddress">End Point *</Label>
-                  <div className="relative">
-                    <div className="absolute left-3 top-3 w-3 h-3 rounded-full bg-red-500"></div>
-                    <Input
-                      id="endAddress"
-                      name="endAddress"
-                      placeholder="Destination address"
-                      value={formData.endAddress}
-                      onChange={handleChange}
-                      className="pl-10"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="pickupAddress">Your Pickup Point *</Label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="pickupAddress"
-                      name="pickupAddress"
-                      placeholder="Where should you be picked up?"
-                      value={formData.pickupAddress}
-                      onChange={handleChange}
-                      className="pl-10"
-                      required
-                    />
-                  </div>
-                  {location.latitude && (
+                  {startPoint && (
                     <p className="text-xs text-green-600 flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
-                      Using your current location coordinates
+                      <Navigation className="h-3 w-3" />
+                      {startPoint.address}
+                    </p>
+                  )}
+                </div>
+
+                {/* Stops Section */}
+                {stops.length > 0 && (
+                  <div className="space-y-3 pl-4 border-l-2 border-dashed border-gray-300">
+                    <Label className="text-sm text-gray-600">Intermediate Stops</Label>
+                    {stops.map((stop, index) => (
+                      <div key={stop.id} className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 relative">
+                            <div className="absolute left-3 top-3 w-3 h-3 rounded-full bg-amber-500 z-10"></div>
+                            <PlacesAutocomplete
+                              placeholder={`Stop ${index + 1} address`}
+                              value={stop.location?.address || ''}
+                              onSelect={(location) => {
+                                updateStop(stop.id, {
+                                  latitude: location.lat,
+                                  longitude: location.lng,
+                                  address: location.address,
+                                });
+                              }}
+                              className="pl-10"
+                              showCurrentLocation
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeStop(stop.id)}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        {stop.location && (
+                          <p className="text-xs text-amber-600 flex items-center gap-1 pl-10">
+                            <MapPin className="h-3 w-3" />
+                            {stop.location.address}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Add Stop Button */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addStop}
+                  className="w-full border-dashed"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Stop
+                </Button>
+
+                <div className="space-y-2">
+                  <Label>End Point *</Label>
+                  <div className="relative">
+                    <div className="absolute left-3 top-3 w-3 h-3 rounded-full bg-red-500 z-10"></div>
+                    <PlacesAutocomplete
+                      placeholder="Destination address"
+                      value={endPoint?.address || ''}
+                      onSelect={(location) => {
+                        setEndPoint({
+                          latitude: location.lat,
+                          longitude: location.lng,
+                          address: location.address,
+                        });
+                      }}
+                      className="pl-10"
+                      showCurrentLocation
+                    />
+                  </div>
+                  {endPoint && (
+                    <p className="text-xs text-red-600 flex items-center gap-1">
+                      <Navigation className="h-3 w-3" />
+                      {endPoint.address}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Your Pickup Point *</Label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-coral z-10" />
+                    <PlacesAutocomplete
+                      placeholder="Where should you be picked up?"
+                      value={pickupPoint?.address || ''}
+                      onSelect={(location) => {
+                        setPickupPoint({
+                          latitude: location.lat,
+                          longitude: location.lng,
+                          address: location.address,
+                        });
+                      }}
+                      className="pl-10"
+                      showCurrentLocation
+                    />
+                  </div>
+                  {pickupPoint && (
+                    <p className="text-xs text-coral flex items-center gap-1">
+                      <Navigation className="h-3 w-3" />
+                      {pickupPoint.address}
                     </p>
                   )}
                 </div>

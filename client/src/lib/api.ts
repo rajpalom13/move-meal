@@ -145,6 +145,7 @@ export const rideClustersApi = {
     startPoint: { latitude: number; longitude: number; address: string };
     endPoint: { latitude: number; longitude: number; address: string };
     pickupPoint: { latitude: number; longitude: number; address: string };
+    stops?: Array<{ latitude: number; longitude: number; address: string }>;
     seatsRequired: number;
     totalFare: number;
     departureTime: string;
