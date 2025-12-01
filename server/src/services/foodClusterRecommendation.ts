@@ -1,9 +1,9 @@
-import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import config from '../config/index.js';
 import { IFoodCluster, IUser } from '../types/index.js';
 import { calculateDistance } from '../utils/location.js';
 
-const openai = config.openai?.apiKey ? new OpenAI({ apiKey: config.openai.apiKey }) : null;
+const genAI = config.gemini?.apiKey ? new GoogleGenerativeAI(config.gemini.apiKey) : null;
 
 export interface FoodClusterRecommendation {
   clusterId: string;
@@ -176,30 +176,26 @@ export const suggestFoodCluster = async (
     defaultRestaurants = ['Dominos', 'Behrouz Biryani', 'KFC'];
   }
 
-  // If OpenAI is available, generate a creative suggestion
-  if (openai) {
+  // If Gemini is available, generate a creative suggestion
+  if (genAI) {
     try {
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
       const prompt = `Suggest a food cluster for college students in India for ${mealType}.
 Recent popular restaurants: ${recentRestaurants?.join(', ') || defaultRestaurants.join(', ')}.
 User's college: ${user.college || 'local college'}
 
-Respond in this exact JSON format only:
+Respond in this exact JSON format only, no markdown:
 {"title": "catchy cluster name", "restaurant": "restaurant name", "description": "short 10 word description", "minimumBasket": 250}`;
 
-      const response = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          { role: 'system', content: 'You suggest food ordering groups for college students. Be fun and relatable. Respond only with valid JSON.' },
-          { role: 'user', content: prompt }
-        ],
-        max_tokens: 150,
-        temperature: 0.8,
-      });
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const content = response.text()?.trim();
 
-      const content = response.choices[0]?.message?.content?.trim();
       if (content) {
         try {
-          const suggestion = JSON.parse(content);
+          // Remove any markdown code block formatting if present
+          const jsonContent = content.replace(/```json\n?|\n?```/g, '').trim();
+          const suggestion = JSON.parse(jsonContent);
           return {
             title: suggestion.title || `${mealType.charAt(0).toUpperCase() + mealType.slice(1)} Squad`,
             restaurant: suggestion.restaurant || defaultRestaurants[0],
@@ -211,7 +207,7 @@ Respond in this exact JSON format only:
         }
       }
     } catch (error) {
-      console.error('OpenAI suggestion error:', error);
+      console.error('Gemini suggestion error:', error);
     }
   }
 
