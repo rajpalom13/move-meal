@@ -291,6 +291,7 @@ export interface IRide extends Document {
 }
 
 // Extended Request with user
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface AuthRequest extends Request {
   user?: IUser;
 }

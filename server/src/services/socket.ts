@@ -12,6 +12,12 @@ interface AuthenticatedWebSocket extends WebSocket {
   user?: SocketUser;
   isAlive?: boolean;
   rooms: Set<string>;
+  readyState: number;
+  send: (data: string | Buffer | ArrayBuffer | Buffer[]) => void;
+  terminate: () => void;
+  ping: (data?: unknown, mask?: boolean, cb?: (err: Error) => void) => void;
+  close: (code?: number, reason?: string | Buffer) => void;
+  on: (event: string, listener: (...args: unknown[]) => void) => this;
 }
 
 interface WebSocketMessage {
