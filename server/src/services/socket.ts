@@ -1,5 +1,5 @@
 import { Server as HttpServer, IncomingMessage } from 'http';
-import { WebSocketServer, WebSocket } from 'ws';
+import { WebSocketServer, WebSocket, RawData } from 'ws';
 import jwt from 'jsonwebtoken';
 import config from '../config/index.js';
 
@@ -8,11 +8,12 @@ interface SocketUser {
   role: string;
 }
 
-interface AuthenticatedWebSocket extends WebSocket {
+// Extended WebSocket with custom properties
+type AuthenticatedWebSocket = WebSocket & {
   user?: SocketUser;
   isAlive?: boolean;
   rooms: Set<string>;
-}
+};
 
 interface WebSocketMessage {
   event: string;
@@ -126,7 +127,7 @@ export const initializeSocket = (server: HttpServer): WebSocketServer => {
       ws.isAlive = true;
     });
 
-    ws.on('message', (rawMessage: Buffer) => {
+    ws.on('message', (rawMessage: RawData) => {
       try {
         const message: WebSocketMessage = JSON.parse(rawMessage.toString());
         const { event, data } = message;
