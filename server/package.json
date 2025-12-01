@@ -7,7 +7,8 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "lint": "eslint src/**/*.ts"
+    "lint": "eslint src/**/*.ts",
+    "seed": "tsx src/scripts/seed.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

@@ -4,68 +4,95 @@
 
 @layer base {
   :root {
-    /* Minimalist theme with your color palette */
-    /* Carbon Black: #262626, Ash Grey: #ACBFA4, Beige: #E2E8CE, Vibrant Coral: #EE6055 */
+    /* New palette: Ivory #F7F7F2, Charcoal #515052, Slate Blue #6C91C2, Forest #516A4E */
 
-    --background: 60 25% 97%; /* Cream tinted white */
-    --foreground: 0 0% 15%; /* Carbon black */
+    --background: 60 14% 96%; /* Ivory #F7F7F2 */
+    --foreground: 300 1% 32%; /* Charcoal #515052 */
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 15%;
+    --card-foreground: 300 1% 32%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 15%;
+    --popover-foreground: 300 1% 32%;
 
-    --primary: 4 82% 63%; /* Coral #EE6055 */
+    --primary: 213 40% 59%; /* Slate Blue #6C91C2 */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 84 23% 70%; /* Sage #ACBFA4 */
-    --secondary-foreground: 0 0% 15%;
+    --secondary: 114 15% 36%; /* Forest #516A4E */
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 60 25% 92%; /* Cream light */
-    --muted-foreground: 0 0% 40%;
+    --muted: 60 14% 94%; /* Ivory light */
+    --muted-foreground: 300 1% 45%;
 
-    --accent: 60 30% 88%; /* Cream #E2E8CE */
-    --accent-foreground: 0 0% 15%;
+    --accent: 114 15% 94%; /* Forest light */
+    --accent-foreground: 300 1% 32%;
 
-    --destructive: 4 82% 63%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 60 15% 88%;
-    --input: 60 15% 88%;
-    --ring: 4 82% 63%;
+    --border: 60 10% 88%;
+    --input: 60 10% 88%;
+    --ring: 213 40% 59%; /* Slate Blue */
 
     --radius: 0.5rem;
+
+    --chart-1: 213 40% 59%; /* Slate Blue */
+    --chart-2: 114 15% 36%; /* Forest */
+    --chart-3: 300 1% 32%; /* Charcoal */
+    --chart-4: 213 40% 70%;
+    --chart-5: 114 15% 50%;
+
+    --sidebar-background: 60 14% 97%;
+    --sidebar-foreground: 300 1% 32%;
+    --sidebar-primary: 213 40% 59%; /* Slate Blue */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 60 14% 94%;
+    --sidebar-accent-foreground: 300 1% 32%;
+    --sidebar-border: 60 10% 90%;
+    --sidebar-ring: 213 40% 59%;
   }
 
   .dark {
-    --background: 0 0% 9%; /* Carbon dark */
-    --foreground: 60 25% 95%;
+    --background: 0 0% 3.9%; /* Carbon dark */
+    --foreground: 0 0% 98%;
 
-    --card: 0 0% 12%;
-    --card-foreground: 60 25% 95%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 12%;
-    --popover-foreground: 60 25% 95%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 4 82% 63%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
 
-    --secondary: 84 20% 25%;
-    --secondary-foreground: 60 25% 95%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 0 0% 18%;
-    --muted-foreground: 0 0% 60%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
 
-    --accent: 84 15% 20%;
-    --accent-foreground: 60 25% 95%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
 
-    --destructive: 4 70% 45%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 4 82% 63%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -85,7 +112,7 @@
 
   /* Clean typography */
   h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight text-carbon-900;
+    @apply font-semibold tracking-tight text-charcoal-dark;
   }
 
   h1 {
@@ -104,25 +131,25 @@
 @layer components {
   /* Minimalist card style */
   .card-minimal {
-    @apply bg-white rounded-lg border border-cream-200 transition-all duration-200;
+    @apply bg-white rounded-lg border border-ivory-200 transition-all duration-200;
   }
 
   .card-minimal:hover {
-    @apply border-sage-300 shadow-sm;
+    @apply border-slate-blue-300 shadow-sm;
   }
 
   /* Clean button base */
   .btn-primary {
-    @apply bg-coral text-white hover:bg-coral-600 transition-colors duration-200;
+    @apply bg-slate-blue text-white hover:bg-slate-blue-600 transition-colors duration-200;
   }
 
   .btn-secondary {
-    @apply bg-sage/20 text-carbon hover:bg-sage/30 transition-colors duration-200;
+    @apply bg-forest/20 text-charcoal hover:bg-forest/30 transition-colors duration-200;
   }
 
   /* Soft input style */
   .input-minimal {
-    @apply bg-cream-50 border-cream-200 focus:border-sage focus:ring-sage/20 transition-all duration-200;
+    @apply bg-ivory border-ivory-200 focus:border-slate-blue focus:ring-slate-blue/20 transition-all duration-200;
   }
 }
 
@@ -158,9 +185,9 @@
     @apply bg-white/80 backdrop-blur-md border border-white/50;
   }
 
-  /* Gradient text using coral */
+  /* Gradient text using slate-blue */
   .gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-coral to-coral-600;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-slate-blue to-forest;
   }
 }
 
@@ -206,20 +233,29 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #d4dfcf;
+  background: #B0C9E3;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #ACBFA4;
+  background: #6C91C2;
 }
 
 /* Clean focus states */
 *:focus-visible {
-  @apply outline-none ring-2 ring-coral/50 ring-offset-2 ring-offset-background;
+  @apply outline-none ring-2 ring-slate-blue/50 ring-offset-2 ring-offset-background;
 }
 
 /* Selection with theme color */
 ::selection {
-  @apply bg-coral/20 text-carbon-900;
+  @apply bg-slate-blue/20 text-charcoal-dark;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }

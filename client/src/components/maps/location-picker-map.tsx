@@ -204,16 +204,16 @@ export default function LocationPickerMap({
 
   if (loadError) {
     return (
-      <div className="flex items-center justify-center bg-cream-50 rounded-xl" style={{ height }}>
-        <p className="text-carbon-500">Failed to load map</p>
+      <div className="flex items-center justify-center bg-ivory rounded-xl" style={{ height }}>
+        <p className="text-charcoal">Failed to load map</p>
       </div>
     );
   }
 
   if (!isLoaded) {
     return (
-      <div className="flex items-center justify-center bg-cream-50 rounded-xl" style={{ height }}>
-        <Loader2 className="h-6 w-6 animate-spin text-coral" />
+      <div className="flex items-center justify-center bg-ivory rounded-xl" style={{ height }}>
+        <Loader2 className="h-6 w-6 animate-spin text-slate-blue" />
       </div>
     );
   }
@@ -221,7 +221,7 @@ export default function LocationPickerMap({
   const center = currentLocation || startLocation || defaultCenter;
 
   return (
-    <div className="relative rounded-xl overflow-hidden border border-cream-200" style={{ height }}>
+    <div className="relative rounded-xl overflow-hidden border border-ivory-200" style={{ height }}>
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
         center={{ lat: center.lat, lng: center.lng }}
@@ -252,7 +252,7 @@ export default function LocationPickerMap({
             icon={{
               url: 'data:image/svg+xml,' + encodeURIComponent(`
                 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="16" cy="16" r="12" fill="#ACBFA4" stroke="white" stroke-width="4"/>
+                  <circle cx="16" cy="16" r="12" fill="#516A4E" stroke="white" stroke-width="4"/>
                 </svg>
               `),
               scaledSize: new google.maps.Size(32, 32),
@@ -268,7 +268,7 @@ export default function LocationPickerMap({
             icon={{
               url: 'data:image/svg+xml,' + encodeURIComponent(`
                 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="16" cy="16" r="12" fill="#EE6055" stroke="white" stroke-width="4"/>
+                  <circle cx="16" cy="16" r="12" fill="#6C91C2" stroke="white" stroke-width="4"/>
                 </svg>
               `),
               scaledSize: new google.maps.Size(32, 32),
@@ -309,7 +309,7 @@ export default function LocationPickerMap({
             options={{
               suppressMarkers: false,
               polylineOptions: {
-                strokeColor: '#ACBFA4',
+                strokeColor: '#516A4E',
                 strokeWeight: 5,
                 strokeOpacity: 0.8,
               },
@@ -324,7 +324,7 @@ export default function LocationPickerMap({
           type="button"
           size="sm"
           variant="secondary"
-          className="absolute bottom-4 right-4 shadow-md bg-white hover:bg-cream-50"
+          className="absolute bottom-4 right-4 shadow-md bg-white hover:bg-ivory"
           onClick={getCurrentLocation}
           disabled={isGettingLocation}
         >
@@ -338,19 +338,19 @@ export default function LocationPickerMap({
 
       {/* Instructions overlay */}
       {mode !== 'single' && !startLocation && (
-        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-sm text-sm text-carbon-600">
-          <MapPin className="h-4 w-4 inline mr-1 text-sage" />
+        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-sm text-sm text-charcoal">
+          <MapPin className="h-4 w-4 inline mr-1 text-forest" />
           Click to set start point
         </div>
       )}
       {mode !== 'single' && startLocation && !endLocation && (
-        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-sm text-sm text-carbon-600">
-          <MapPin className="h-4 w-4 inline mr-1 text-coral" />
+        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-sm text-sm text-charcoal">
+          <MapPin className="h-4 w-4 inline mr-1 text-slate-blue" />
           Click to set destination
         </div>
       )}
       {mode === 'route-with-stops' && startLocation && endLocation && (
-        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-sm text-sm text-carbon-600">
+        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-sm text-sm text-charcoal">
           <MapPin className="h-4 w-4 inline mr-1 text-amber-500" />
           Click to add stops
         </div>

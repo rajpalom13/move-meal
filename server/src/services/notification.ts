@@ -162,3 +162,143 @@ export const sendDeliveryOTPNotification = async (
 
   return sendEmail(email, 'Your Order is Out for Delivery - MoveNmeal', html);
 };
+
+// Food Cluster Status Change Notifications
+export const sendFoodClusterStatusNotification = async (
+  email: string,
+  memberName: string,
+  clusterTitle: string,
+  restaurant: string,
+  newStatus: string,
+  otp?: string
+): Promise<boolean> => {
+  const statusMessages: Record<string, { subject: string; heading: string; body: string; color: string }> = {
+    ordered: {
+      subject: `Order Placed - ${clusterTitle}`,
+      heading: 'Order Placed!',
+      body: `The cluster order from <strong>${restaurant}</strong> has been placed. You will be notified when it's ready for pickup.`,
+      color: '#f97316',
+    },
+    ready: {
+      subject: `Order Ready for Pickup - ${clusterTitle}`,
+      heading: 'Your Order is Ready!',
+      body: `The order from <strong>${restaurant}</strong> is ready for pickup. Please collect your items from the cluster organizer.`,
+      color: '#10b981',
+    },
+    collecting: {
+      subject: `Collection Started - ${clusterTitle}`,
+      heading: 'Collection in Progress',
+      body: `Members are now collecting their orders from <strong>${restaurant}</strong>. Head over to collect yours!`,
+      color: '#f59e0b',
+    },
+    completed: {
+      subject: `Cluster Completed - ${clusterTitle}`,
+      heading: 'Order Complete!',
+      body: `The food cluster for <strong>${restaurant}</strong> has been completed. Thanks for using MoveNmeal!`,
+      color: '#6b7280',
+    },
+    cancelled: {
+      subject: `Cluster Cancelled - ${clusterTitle}`,
+      heading: 'Cluster Cancelled',
+      body: `Unfortunately, the food cluster for <strong>${restaurant}</strong> has been cancelled by the organizer.`,
+      color: '#ef4444',
+    },
+  };
+
+  const statusInfo = statusMessages[newStatus];
+  if (!statusInfo) return false;
+
+  const otpSection = otp && newStatus === 'ready' ? `
+    <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+      <p style="margin: 0 0 10px 0; color: #92400e;"><strong>Your Collection Code:</strong></p>
+      <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #92400e;">${otp}</span>
+      <p style="margin: 10px 0 0 0; font-size: 12px; color: #a16207;">Show this code to the organizer to collect your order</p>
+    </div>
+  ` : '';
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <h2 style="color: #f97316; margin-bottom: 5px;">MoveNmeal</h2>
+      <p style="color: #6b7280; margin-top: 0;">Hi ${memberName},</p>
+
+      <div style="background: ${statusInfo.color}10; border-left: 4px solid ${statusInfo.color}; padding: 15px 20px; border-radius: 0 8px 8px 0; margin: 20px 0;">
+        <h3 style="color: ${statusInfo.color}; margin: 0 0 10px 0;">${statusInfo.heading}</h3>
+        <p style="color: #374151; margin: 0;">${statusInfo.body}</p>
+      </div>
+
+      ${otpSection}
+
+      <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+        View details in your <a href="https://movenmeal.com/dashboard/food-clusters" style="color: #f97316;">MoveNmeal dashboard</a>.
+      </p>
+    </div>
+  `;
+
+  return sendEmail(email, statusInfo.subject, html);
+};
+
+// Ride Cluster Status Change Notifications
+export const sendRideClusterStatusNotification = async (
+  email: string,
+  memberName: string,
+  rideTitle: string,
+  destination: string,
+  newStatus: string,
+  departureTime?: string
+): Promise<boolean> => {
+  const statusMessages: Record<string, { subject: string; heading: string; body: string; color: string }> = {
+    filled: {
+      subject: `Ride Full - ${rideTitle}`,
+      heading: 'Ride is Full!',
+      body: `All seats for the ride to <strong>${destination}</strong> have been booked. Get ready for departure!`,
+      color: '#10b981',
+    },
+    in_progress: {
+      subject: `Ride Started - ${rideTitle}`,
+      heading: 'Your Ride has Started!',
+      body: `The ride to <strong>${destination}</strong> is now in progress. Have a safe journey!`,
+      color: '#f59e0b',
+    },
+    completed: {
+      subject: `Ride Completed - ${rideTitle}`,
+      heading: 'Ride Complete!',
+      body: `The ride to <strong>${destination}</strong> has been completed. Thanks for sharing the ride!`,
+      color: '#6b7280',
+    },
+    cancelled: {
+      subject: `Ride Cancelled - ${rideTitle}`,
+      heading: 'Ride Cancelled',
+      body: `Unfortunately, the ride to <strong>${destination}</strong> has been cancelled by the organizer.`,
+      color: '#ef4444',
+    },
+  };
+
+  const statusInfo = statusMessages[newStatus];
+  if (!statusInfo) return false;
+
+  const timeSection = departureTime && newStatus === 'filled' ? `
+    <div style="background: #f3f4f6; padding: 15px 20px; border-radius: 8px; margin: 20px 0;">
+      <p style="margin: 0; color: #374151;"><strong>Departure Time:</strong> ${new Date(departureTime).toLocaleString()}</p>
+    </div>
+  ` : '';
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <h2 style="color: #059669; margin-bottom: 5px;">MoveNmeal</h2>
+      <p style="color: #6b7280; margin-top: 0;">Hi ${memberName},</p>
+
+      <div style="background: ${statusInfo.color}10; border-left: 4px solid ${statusInfo.color}; padding: 15px 20px; border-radius: 0 8px 8px 0; margin: 20px 0;">
+        <h3 style="color: ${statusInfo.color}; margin: 0 0 10px 0;">${statusInfo.heading}</h3>
+        <p style="color: #374151; margin: 0;">${statusInfo.body}</p>
+      </div>
+
+      ${timeSection}
+
+      <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+        View details in your <a href="https://movenmeal.com/dashboard/ride-clusters" style="color: #059669;">MoveNmeal dashboard</a>.
+      </p>
+    </div>
+  `;
+
+  return sendEmail(email, statusInfo.subject, html);
+};

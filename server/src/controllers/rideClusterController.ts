@@ -3,6 +3,12 @@ import { RideCluster } from '../models/RideCluster.js';
 import { User } from '../models/User.js';
 import { AuthRequest } from '../types/index.js';
 import { calculateDistance } from '../utils/location.js';
+import { sendRideClusterStatusNotification } from '../services/notification.js';
+import {
+  notifyClusterUpdate,
+  notifyMemberJoined,
+  notifyMemberLeft,
+} from '../services/socket.js';
 
 // Create a new ride cluster
 export const createRideCluster = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -286,6 +292,13 @@ export const joinRideCluster = async (req: AuthRequest, res: Response): Promise<
     await cluster.populate('creator', 'name avatar phone college gender');
     await cluster.populate('members.user', 'name avatar phone college gender');
 
+    // Emit WebSocket events for real-time updates
+    notifyClusterUpdate(cluster._id.toString(), cluster.toObject());
+    notifyMemberJoined(cluster._id.toString(), {
+      user: req.user,
+      pickupPoint,
+    });
+
     res.json({
       success: true,
       data: cluster,
@@ -356,6 +369,12 @@ export const leaveRideCluster = async (req: AuthRequest, res: Response): Promise
     );
 
     await cluster.save();
+    await cluster.populate('creator', 'name avatar phone college gender');
+    await cluster.populate('members.user', 'name avatar phone college gender');
+
+    // Emit WebSocket events for real-time updates
+    notifyClusterUpdate(cluster._id.toString(), cluster.toObject());
+    notifyMemberLeft(cluster._id.toString(), userId.toString());
 
     res.json({
       success: true,
@@ -413,6 +432,32 @@ export const updateRideClusterStatus = async (req: AuthRequest, res: Response): 
 
     cluster.status = status;
     await cluster.save();
+    await cluster.populate('creator', 'name avatar phone college gender email');
+    await cluster.populate('members.user', 'name avatar phone college gender email');
+
+    // Emit WebSocket event for real-time updates
+    notifyClusterUpdate(cluster._id.toString(), cluster.toObject());
+
+    // Send email notifications to all members except the creator
+    const notifiableStatuses = ['filled', 'in_progress', 'completed', 'cancelled'];
+    if (notifiableStatuses.includes(status)) {
+      // Send notifications asynchronously (don't block the response)
+      Promise.all(
+        cluster.members
+          .filter((member) => member.user._id.toString() !== cluster.creator._id.toString())
+          .map((member) => {
+            const memberUser = member.user as unknown as { email: string; name: string };
+            return sendRideClusterStatusNotification(
+              memberUser.email,
+              memberUser.name,
+              cluster.title,
+              cluster.endPoint.address,
+              status,
+              status === 'filled' ? cluster.departureTime.toISOString() : undefined
+            );
+          })
+      ).catch((err) => console.error('Failed to send ride status notification emails:', err));
+    }
 
     res.json({
       success: true,
@@ -497,6 +542,27 @@ export const cancelRideCluster = async (req: AuthRequest, res: Response): Promis
 
     cluster.status = 'cancelled';
     await cluster.save();
+    await cluster.populate('creator', 'name avatar phone college gender email');
+    await cluster.populate('members.user', 'name avatar phone college gender email');
+
+    // Emit WebSocket event for real-time updates
+    notifyClusterUpdate(cluster._id.toString(), cluster.toObject());
+
+    // Send cancellation email to all members except creator
+    Promise.all(
+      cluster.members
+        .filter((member) => member.user._id.toString() !== cluster.creator._id.toString())
+        .map((member) => {
+          const memberUser = member.user as unknown as { email: string; name: string };
+          return sendRideClusterStatusNotification(
+            memberUser.email,
+            memberUser.name,
+            cluster.title,
+            cluster.endPoint.address,
+            'cancelled'
+          );
+        })
+    ).catch((err) => console.error('Failed to send ride cancellation emails:', err));
 
     res.json({
       success: true,
@@ -633,6 +699,9 @@ export const updatePickupPoint = async (req: AuthRequest, res: Response): Promis
     await cluster.save();
     await cluster.populate('creator', 'name avatar phone college gender');
     await cluster.populate('members.user', 'name avatar phone college gender');
+
+    // Emit WebSocket event for real-time updates
+    notifyClusterUpdate(cluster._id.toString(), cluster.toObject());
 
     res.json({
       success: true,

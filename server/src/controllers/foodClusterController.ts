@@ -6,6 +6,12 @@ import {
   suggestFoodCluster,
   getJoinReasons,
 } from '../services/foodClusterRecommendation.js';
+import { sendFoodClusterStatusNotification } from '../services/notification.js';
+import {
+  notifyClusterUpdate,
+  notifyMemberJoined,
+  notifyMemberLeft,
+} from '../services/socket.js';
 
 // Generate a 4-digit OTP
 const generateOTP = (): string => {
@@ -277,13 +283,23 @@ export const joinFoodCluster = async (req: AuthRequest, res: Response): Promise<
     await cluster.populate('creator', 'name avatar phone college');
     await cluster.populate('members.user', 'name avatar phone college');
 
+    const clusterData = {
+      ...cluster.toObject(),
+      basketProgress: Math.min(100, Math.round((cluster.currentTotal / cluster.minimumBasket) * 100)),
+      amountNeeded: Math.max(0, cluster.minimumBasket - cluster.currentTotal),
+    };
+
+    // Emit WebSocket events for real-time updates
+    notifyClusterUpdate(cluster._id.toString(), clusterData);
+    notifyMemberJoined(cluster._id.toString(), {
+      user: req.user,
+      orderAmount,
+      items,
+    });
+
     res.json({
       success: true,
-      data: {
-        ...cluster.toObject(),
-        basketProgress: Math.min(100, Math.round((cluster.currentTotal / cluster.minimumBasket) * 100)),
-        amountNeeded: Math.max(0, cluster.minimumBasket - cluster.currentTotal),
-      },
+      data: clusterData,
     });
   } catch (error) {
     console.error('Join food cluster error:', error);
@@ -349,6 +365,17 @@ export const leaveFoodCluster = async (req: AuthRequest, res: Response): Promise
     }
 
     await cluster.save();
+    await cluster.populate('creator', 'name avatar phone college');
+    await cluster.populate('members.user', 'name avatar phone college');
+
+    // Emit WebSocket events for real-time updates
+    const clusterData = {
+      ...cluster.toObject(),
+      basketProgress: Math.min(100, Math.round((cluster.currentTotal / cluster.minimumBasket) * 100)),
+      amountNeeded: Math.max(0, cluster.minimumBasket - cluster.currentTotal),
+    };
+    notifyClusterUpdate(cluster._id.toString(), clusterData);
+    notifyMemberLeft(cluster._id.toString(), userId.toString());
 
     res.json({
       success: true,
@@ -425,16 +452,42 @@ export const updateFoodClusterStatus = async (req: AuthRequest, res: Response): 
 
     cluster.status = status;
     await cluster.save();
-    await cluster.populate('creator', 'name avatar phone college');
-    await cluster.populate('members.user', 'name avatar phone college');
+    await cluster.populate('creator', 'name avatar phone college email');
+    await cluster.populate('members.user', 'name avatar phone college email');
+
+    const clusterData = {
+      ...cluster.toObject(),
+      basketProgress: Math.min(100, Math.round((cluster.currentTotal / cluster.minimumBasket) * 100)),
+      amountNeeded: Math.max(0, cluster.minimumBasket - cluster.currentTotal),
+    };
+
+    // Emit WebSocket event for real-time updates
+    notifyClusterUpdate(cluster._id.toString(), clusterData);
+
+    // Send email notifications to all members except the creator
+    const notifiableStatuses = ['ordered', 'ready', 'collecting', 'completed', 'cancelled'];
+    if (notifiableStatuses.includes(status)) {
+      // Send notifications asynchronously (don't block the response)
+      Promise.all(
+        cluster.members
+          .filter((member) => member.user._id.toString() !== cluster.creator._id.toString())
+          .map((member) => {
+            const memberUser = member.user as unknown as { email: string; name: string };
+            return sendFoodClusterStatusNotification(
+              memberUser.email,
+              memberUser.name,
+              cluster.title,
+              cluster.restaurant,
+              status,
+              status === 'ready' ? member.collectionOtp : undefined
+            );
+          })
+      ).catch((err) => console.error('Failed to send status notification emails:', err));
+    }
 
     res.json({
       success: true,
-      data: {
-        ...cluster.toObject(),
-        basketProgress: Math.min(100, Math.round((cluster.currentTotal / cluster.minimumBasket) * 100)),
-        amountNeeded: Math.max(0, cluster.minimumBasket - cluster.currentTotal),
-      },
+      data: clusterData,
     });
   } catch (error) {
     console.error('Update food cluster status error:', error);
@@ -523,14 +576,19 @@ export const verifyCollectionOtp = async (req: AuthRequest, res: Response): Prom
     const collectedMember = cluster.members[memberIndex];
     const memberUser = collectedMember.user as unknown as { name: string };
 
+    const clusterData = {
+      ...cluster.toObject(),
+      basketProgress: Math.min(100, Math.round((cluster.currentTotal / cluster.minimumBasket) * 100)),
+      amountNeeded: Math.max(0, cluster.minimumBasket - cluster.currentTotal),
+    };
+
+    // Emit WebSocket event for real-time updates
+    notifyClusterUpdate(cluster._id.toString(), clusterData);
+
     res.json({
       success: true,
       message: `Order collected by ${memberUser.name}`,
-      data: {
-        ...cluster.toObject(),
-        basketProgress: Math.min(100, Math.round((cluster.currentTotal / cluster.minimumBasket) * 100)),
-        amountNeeded: Math.max(0, cluster.minimumBasket - cluster.currentTotal),
-      },
+      data: clusterData,
     });
   } catch (error) {
     console.error('Verify collection OTP error:', error);
@@ -626,6 +684,33 @@ export const cancelFoodCluster = async (req: AuthRequest, res: Response): Promis
 
     cluster.status = 'cancelled';
     await cluster.save();
+    await cluster.populate('creator', 'name avatar phone college email');
+    await cluster.populate('members.user', 'name avatar phone college email');
+
+    const clusterData = {
+      ...cluster.toObject(),
+      basketProgress: Math.min(100, Math.round((cluster.currentTotal / cluster.minimumBasket) * 100)),
+      amountNeeded: Math.max(0, cluster.minimumBasket - cluster.currentTotal),
+    };
+
+    // Emit WebSocket event for real-time updates
+    notifyClusterUpdate(cluster._id.toString(), clusterData);
+
+    // Send cancellation email to all members except creator
+    Promise.all(
+      cluster.members
+        .filter((member) => member.user._id.toString() !== cluster.creator._id.toString())
+        .map((member) => {
+          const memberUser = member.user as unknown as { email: string; name: string };
+          return sendFoodClusterStatusNotification(
+            memberUser.email,
+            memberUser.name,
+            cluster.title,
+            cluster.restaurant,
+            'cancelled'
+          );
+        })
+    ).catch((err) => console.error('Failed to send food cluster cancellation emails:', err));
 
     res.json({
       success: true,
@@ -691,13 +776,18 @@ export const updateMemberOrder = async (req: AuthRequest, res: Response): Promis
     await cluster.populate('creator', 'name avatar phone college');
     await cluster.populate('members.user', 'name avatar phone college');
 
+    const clusterData = {
+      ...cluster.toObject(),
+      basketProgress: Math.min(100, Math.round((cluster.currentTotal / cluster.minimumBasket) * 100)),
+      amountNeeded: Math.max(0, cluster.minimumBasket - cluster.currentTotal),
+    };
+
+    // Emit WebSocket event for real-time updates
+    notifyClusterUpdate(cluster._id.toString(), clusterData);
+
     res.json({
       success: true,
-      data: {
-        ...cluster.toObject(),
-        basketProgress: Math.min(100, Math.round((cluster.currentTotal / cluster.minimumBasket) * 100)),
-        amountNeeded: Math.max(0, cluster.minimumBasket - cluster.currentTotal),
-      },
+      data: clusterData,
     });
   } catch (error) {
     console.error('Update member order error:', error);

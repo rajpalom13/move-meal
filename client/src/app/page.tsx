@@ -1,21 +1,51 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MapPin, Users, Truck, Shield, ArrowRight } from 'lucide-react';
+import { useAuthStore } from '@/context/auth-store';
 
 export default function Home() {
+  const router = useRouter();
+  const { isAuthenticated, _hasHydrated } = useAuthStore();
+
+  useEffect(() => {
+    if (_hasHydrated && isAuthenticated) {
+      router.push('/dashboard');
+    }
+  }, [_hasHydrated, isAuthenticated, router]);
+
+  // Show loading while checking auth
+  if (!_hasHydrated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-ivory">
+        <div className="animate-spin h-8 w-8 border-3 border-slate-blue border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  // If authenticated, show loading while redirecting
+  if (isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-ivory">
+        <div className="animate-spin h-8 w-8 border-3 border-slate-blue border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-cream-50">
+    <div className="min-h-screen bg-ivory">
       {/* Header */}
       <header className="container mx-auto px-4 py-6">
         <nav className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg bg-coral flex items-center justify-center">
+            <div className="h-10 w-10 rounded-lg bg-slate-blue flex items-center justify-center">
               <span className="text-white font-bold text-xl">M</span>
             </div>
-            <span className="text-2xl font-semibold text-carbon-900">MoveNmeal</span>
+            <span className="text-2xl font-semibold text-charcoal-dark">MoveNmeal</span>
           </div>
           <div className="flex items-center gap-3">
             <Link href="/auth/login">
@@ -30,15 +60,15 @@ export default function Home() {
 
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-24 text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-sage-100 rounded-full text-sage-700 text-sm font-medium mb-8">
-          <span className="h-2 w-2 bg-sage-500 rounded-full"></span>
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-forest-100 rounded-full text-forest-700 text-sm font-medium mb-8">
+          <span className="h-2 w-2 bg-forest-500 rounded-full"></span>
           Save up to 50% on delivery fees
         </div>
-        <h1 className="text-5xl md:text-6xl font-bold text-carbon-900 mb-6 tracking-tight">
+        <h1 className="text-5xl md:text-6xl font-bold text-charcoal-dark mb-6 tracking-tight">
           Order Together,<br />
-          <span className="text-coral">Save Together</span>
+          <span className="text-slate-blue">Save Together</span>
         </h1>
-        <p className="text-lg text-carbon-500 mb-10 max-w-xl mx-auto leading-relaxed">
+        <p className="text-lg text-charcoal mb-10 max-w-xl mx-auto leading-relaxed">
           Join food clusters with people nearby and split delivery fees.
           AI-powered recommendations help you find the perfect group.
         </p>
@@ -60,18 +90,18 @@ export default function Home() {
       {/* Features Section */}
       <section id="how-it-works" className="container mx-auto px-4 py-24">
         <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-carbon-900 mb-4">
+          <h2 className="text-3xl font-bold text-charcoal-dark mb-4">
             How It Works
           </h2>
-          <p className="text-carbon-500 max-w-md mx-auto">
+          <p className="text-charcoal max-w-md mx-auto">
             Four simple steps to start saving on every order
           </p>
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="border-0 bg-white shadow-sm hover:shadow-md">
             <CardHeader>
-              <div className="h-12 w-12 rounded-lg bg-sage-100 flex items-center justify-center mb-4">
-                <MapPin className="h-6 w-6 text-sage-600" />
+              <div className="h-12 w-12 rounded-lg bg-forest-100 flex items-center justify-center mb-4">
+                <MapPin className="h-6 w-6 text-forest-600" />
               </div>
               <CardTitle className="text-lg">Find Nearby</CardTitle>
               <CardDescription>
@@ -82,8 +112,8 @@ export default function Home() {
 
           <Card className="border-0 bg-white shadow-sm hover:shadow-md">
             <CardHeader>
-              <div className="h-12 w-12 rounded-lg bg-coral/10 flex items-center justify-center mb-4">
-                <Users className="h-6 w-6 text-coral" />
+              <div className="h-12 w-12 rounded-lg bg-slate-blue/10 flex items-center justify-center mb-4">
+                <Users className="h-6 w-6 text-slate-blue" />
               </div>
               <CardTitle className="text-lg">Join or Create</CardTitle>
               <CardDescription>
@@ -94,8 +124,8 @@ export default function Home() {
 
           <Card className="border-0 bg-white shadow-sm hover:shadow-md">
             <CardHeader>
-              <div className="h-12 w-12 rounded-lg bg-cream-200 flex items-center justify-center mb-4">
-                <Truck className="h-6 w-6 text-carbon-600" />
+              <div className="h-12 w-12 rounded-lg bg-ivory-200 flex items-center justify-center mb-4">
+                <Truck className="h-6 w-6 text-charcoal" />
               </div>
               <CardTitle className="text-lg">Track Live</CardTitle>
               <CardDescription>
@@ -106,8 +136,8 @@ export default function Home() {
 
           <Card className="border-0 bg-white shadow-sm hover:shadow-md">
             <CardHeader>
-              <div className="h-12 w-12 rounded-lg bg-sage-100 flex items-center justify-center mb-4">
-                <Shield className="h-6 w-6 text-sage-600" />
+              <div className="h-12 w-12 rounded-lg bg-forest-100 flex items-center justify-center mb-4">
+                <Shield className="h-6 w-6 text-forest-600" />
               </div>
               <CardTitle className="text-lg">Secure Pickup</CardTitle>
               <CardDescription>
@@ -119,20 +149,20 @@ export default function Home() {
       </section>
 
       {/* Stats Section */}
-      <section className="bg-carbon-900 py-20">
+      <section className="bg-charcoal-dark py-20">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-3 gap-12 text-center">
             <div>
-              <div className="text-5xl font-bold text-coral mb-2">50%</div>
-              <div className="text-carbon-400">Average Savings on Delivery</div>
+              <div className="text-5xl font-bold text-slate-blue mb-2">50%</div>
+              <div className="text-charcoal-light">Average Savings on Delivery</div>
             </div>
             <div>
-              <div className="text-5xl font-bold text-sage mb-2">10K+</div>
-              <div className="text-carbon-400">Active Users</div>
+              <div className="text-5xl font-bold text-forest mb-2">10K+</div>
+              <div className="text-charcoal-light">Active Users</div>
             </div>
             <div>
-              <div className="text-5xl font-bold text-cream mb-2">500+</div>
-              <div className="text-carbon-400">Partner Restaurants</div>
+              <div className="text-5xl font-bold text-ivory mb-2">500+</div>
+              <div className="text-charcoal-light">Partner Restaurants</div>
             </div>
           </div>
         </div>
@@ -140,11 +170,11 @@ export default function Home() {
 
       {/* CTA Section */}
       <section className="container mx-auto px-4 py-24 text-center">
-        <div className="max-w-2xl mx-auto bg-white rounded-2xl p-12 shadow-sm border border-cream-200">
-          <h2 className="text-3xl font-bold text-carbon-900 mb-4">
+        <div className="max-w-2xl mx-auto bg-white rounded-2xl p-12 shadow-sm border border-ivory-200">
+          <h2 className="text-3xl font-bold text-charcoal-dark mb-4">
             Ready to Save?
           </h2>
-          <p className="text-carbon-500 mb-8">
+          <p className="text-charcoal mb-8">
             Join thousands saving money through shared deliveries.
           </p>
           <Link href="/auth/register">
@@ -156,17 +186,17 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-carbon-900 text-carbon-400 py-16">
+      <footer className="bg-charcoal-dark text-charcoal-light py-16">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <div className="h-9 w-9 rounded-lg bg-coral flex items-center justify-center">
+                <div className="h-9 w-9 rounded-lg bg-slate-blue flex items-center justify-center">
                   <span className="text-white font-bold">M</span>
                 </div>
                 <span className="text-xl font-semibold text-white">MoveNmeal</span>
               </div>
-              <p className="text-sm text-carbon-500">
+              <p className="text-sm text-charcoal">
                 Order together, save together. The smarter way to get food delivered.
               </p>
             </div>
@@ -194,7 +224,7 @@ export default function Home() {
               </ul>
             </div>
           </div>
-          <div className="border-t border-carbon-800 mt-12 pt-8 text-center text-sm text-carbon-500">
+          <div className="border-t border-charcoal mt-12 pt-8 text-center text-sm text-charcoal">
             &copy; {new Date().getFullYear()} MoveNmeal. All rights reserved.
           </div>
         </div>

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +11,14 @@ import { useAuthStore } from '@/context/auth-store';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { register, isLoading } = useAuthStore();
+  const { register, isLoading, isAuthenticated, _hasHydrated } = useAuthStore();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (_hasHydrated && isAuthenticated) {
+      router.push('/dashboard');
+    }
+  }, [_hasHydrated, isAuthenticated, router]);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -56,28 +64,41 @@ export default function RegisterPage() {
     }
   };
 
+  // Show loading while checking auth or if already authenticated
+  if (!_hasHydrated || isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-ivory">
+        <div className="animate-spin h-8 w-8 border-3 border-slate-blue border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-cream-50 py-12 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-ivory py-12 px-4">
       <Card className="w-full max-w-md border-0 shadow-sm">
         <CardHeader className="text-center pb-2">
           <div className="flex justify-center mb-4">
-            <div className="h-12 w-12 rounded-lg bg-coral flex items-center justify-center">
-              <span className="text-white font-bold text-2xl">M</span>
-            </div>
+            <Image
+              src="/logo.png"
+              alt="MoveNmeal"
+              width={56}
+              height={56}
+              className="rounded-lg"
+            />
           </div>
-          <CardTitle className="text-2xl text-carbon-900">Join MoveNmeal</CardTitle>
-          <CardDescription className="text-carbon-500">Create an account to share rides and food orders</CardDescription>
+          <CardTitle className="text-2xl text-charcoal-dark">Join MoveNmeal</CardTitle>
+          <CardDescription className="text-charcoal">Create an account to share rides and food orders</CardDescription>
         </CardHeader>
         <CardContent>
           {error && (
-            <div className="mb-4 p-3 bg-coral/10 text-coral text-sm rounded-lg border border-coral/20">
+            <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-slate-blue/20">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-carbon-700 mb-1.5">Full Name *</label>
+              <label className="block text-sm font-medium text-charcoal-dark mb-1.5">Full Name *</label>
               <Input
                 name="name"
                 value={formData.name}
@@ -88,7 +109,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-carbon-700 mb-1.5">Email *</label>
+              <label className="block text-sm font-medium text-charcoal-dark mb-1.5">Email *</label>
               <Input
                 type="email"
                 name="email"
@@ -100,7 +121,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-carbon-700 mb-1.5">Phone Number *</label>
+              <label className="block text-sm font-medium text-charcoal-dark mb-1.5">Phone Number *</label>
               <Input
                 type="tel"
                 name="phone"
@@ -112,7 +133,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-carbon-700 mb-1.5">College / University</label>
+              <label className="block text-sm font-medium text-charcoal-dark mb-1.5">College / University</label>
               <Input
                 name="college"
                 value={formData.college}
@@ -122,25 +143,25 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-carbon-700 mb-1.5">Gender</label>
+              <label className="block text-sm font-medium text-charcoal-dark mb-1.5">Gender</label>
               <select
                 name="gender"
                 value={formData.gender}
                 onChange={handleChange}
-                className="w-full h-11 px-4 rounded-md border border-cream-200 bg-cream-50/50 text-sm text-carbon-900 transition-all duration-200 focus:border-sage focus:bg-white focus:outline-none focus:ring-2 focus:ring-sage/20"
+                className="w-full h-11 px-4 rounded-md border border-ivory-200 bg-ivory/50 text-sm text-charcoal-dark transition-all duration-200 focus:border-slate-blue focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-blue/20"
               >
                 <option value="">Select gender (optional)</option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
                 <option value="other">Other</option>
               </select>
-              <p className="text-xs text-carbon-500 mt-1.5">
+              <p className="text-xs text-charcoal mt-1.5">
                 Required for female-only ride clusters
               </p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-carbon-700 mb-1.5">Password *</label>
+              <label className="block text-sm font-medium text-charcoal-dark mb-1.5">Password *</label>
               <Input
                 type="password"
                 name="password"
@@ -152,7 +173,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-carbon-700 mb-1.5">Confirm Password *</label>
+              <label className="block text-sm font-medium text-charcoal-dark mb-1.5">Confirm Password *</label>
               <Input
                 type="password"
                 name="confirmPassword"
@@ -168,18 +189,18 @@ export default function RegisterPage() {
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-carbon-500">
+          <div className="mt-6 text-center text-sm text-charcoal">
             Already have an account?{' '}
-            <Link href="/auth/login" className="text-coral hover:underline font-medium">
+            <Link href="/auth/login" className="text-slate-blue hover:underline font-medium">
               Sign in
             </Link>
           </div>
 
-          <p className="mt-4 text-xs text-center text-carbon-400">
+          <p className="mt-4 text-xs text-center text-charcoal-light">
             By creating an account, you agree to our{' '}
-            <a href="#" className="text-coral hover:underline">Terms of Service</a>
+            <a href="#" className="text-slate-blue hover:underline">Terms of Service</a>
             {' '}and{' '}
-            <a href="#" className="text-coral hover:underline">Privacy Policy</a>
+            <a href="#" className="text-slate-blue hover:underline">Privacy Policy</a>
           </p>
         </CardContent>
       </Card>

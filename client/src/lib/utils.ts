@@ -1,59 +1,44 @@
-import { type ClassValue, clsx } from "clsx"
+import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function formatCurrency(amount: number | undefined | null): string {
+export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
+    minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(amount ?? 0);
+  }).format(amount)
 }
 
 export function formatDate(date: string | Date): string {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
+  return new Date(date).toLocaleDateString('en-IN', {
     day: 'numeric',
+    month: 'short',
     year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(date));
+  })
 }
 
-export function formatDistance(km: number): string {
-  if (km < 1) {
-    return `${Math.round(km * 1000)}m`;
+export function getStatusColor(status: string): string {
+  const statusColors: Record<string, string> = {
+    open: 'bg-forest-100 text-forest-700',
+    filled: 'bg-blue-100 text-blue-700',
+    ordered: 'bg-amber-100 text-amber-700',
+    ready: 'bg-purple-100 text-purple-700',
+    collecting: 'bg-orange-100 text-orange-700',
+    in_progress: 'bg-slate-blue/10 text-slate-blue',
+    completed: 'bg-gray-100 text-charcoal',
+    cancelled: 'bg-red-100 text-red-700',
   }
-  return `${km.toFixed(1)}km`;
+  return statusColors[status] || 'bg-gray-100 text-gray-700'
 }
 
-export function getStatusColor(status: string | undefined | null): string {
-  if (!status) return 'bg-gray-100 text-gray-800';
-  const colors: Record<string, string> = {
-    // Food cluster statuses
-    open: 'bg-blue-100 text-blue-800',
-    filled: 'bg-purple-100 text-purple-800',
-    ordered: 'bg-yellow-100 text-yellow-800',
-    ready: 'bg-indigo-100 text-indigo-800',
-    collecting: 'bg-orange-100 text-orange-800',
-    completed: 'bg-green-100 text-green-800',
-    delivered: 'bg-green-100 text-green-800',
-    cancelled: 'bg-red-100 text-red-800',
-    // Ride cluster statuses
-    in_progress: 'bg-orange-100 text-orange-800',
-    // Legacy
-    pending: 'bg-yellow-100 text-yellow-800',
-    confirmed: 'bg-blue-100 text-blue-800',
-    preparing: 'bg-purple-100 text-purple-800',
-    delivering: 'bg-orange-100 text-orange-800',
-    forming: 'bg-gray-100 text-gray-800',
-    active: 'bg-green-100 text-green-800',
-    locked: 'bg-yellow-100 text-yellow-800',
-    available: 'bg-green-100 text-green-800',
-    assigned: 'bg-blue-100 text-blue-800',
-  };
-  return colors[status] || 'bg-gray-100 text-gray-800';
+export function formatDistance(meters: number): string {
+  if (meters < 1000) {
+    return `${Math.round(meters)}m`
+  }
+  return `${(meters / 1000).toFixed(1)}km`
 }

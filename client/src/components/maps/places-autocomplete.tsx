@@ -38,7 +38,7 @@ export default function PlacesAutocomplete({
   placeholder = 'Search location...',
   className,
   icon,
-  iconColor = 'text-carbon-400',
+  iconColor = 'text-charcoal-light',
   disabled = false,
   showCurrentLocation = false,
 }: PlacesAutocompleteProps) {
@@ -218,12 +218,12 @@ export default function PlacesAutocomplete({
       {/* Loading/Clear button */}
       <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
         {isLoading ? (
-          <Loader2 className="h-4 w-4 animate-spin text-carbon-400" />
+          <Loader2 className="h-4 w-4 animate-spin text-charcoal-light" />
         ) : inputValue ? (
           <button
             type="button"
             onClick={handleClear}
-            className="text-carbon-400 hover:text-carbon-600 transition-colors"
+            className="text-charcoal-light hover:text-charcoal transition-colors"
           >
             <X className="h-4 w-4" />
           </button>
@@ -232,21 +232,21 @@ export default function PlacesAutocomplete({
 
       {/* Dropdown */}
       {isOpen && (predictions.length > 0 || showCurrentLocation) && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-cream-200 shadow-lg z-50 max-h-64 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-ivory-200 shadow-lg z-50 max-h-64 overflow-y-auto">
           {/* Current location option */}
           {showCurrentLocation && (
             <button
               type="button"
               onClick={getCurrentLocation}
               disabled={isGettingLocation}
-              className="w-full px-4 py-3 flex items-center gap-3 hover:bg-sage-50 transition-colors text-left border-b border-cream-100"
+              className="w-full px-4 py-3 flex items-center gap-3 hover:bg-forest-50 transition-colors text-left border-b border-ivory-100"
             >
               {isGettingLocation ? (
-                <Loader2 className="h-4 w-4 animate-spin text-sage" />
+                <Loader2 className="h-4 w-4 animate-spin text-forest" />
               ) : (
-                <Navigation className="h-4 w-4 text-sage" />
+                <Navigation className="h-4 w-4 text-forest" />
               )}
-              <span className="text-sm text-sage-700 font-medium">Use current location</span>
+              <span className="text-sm text-forest-700 font-medium">Use current location</span>
             </button>
           )}
 
@@ -256,14 +256,14 @@ export default function PlacesAutocomplete({
               key={prediction.place_id}
               type="button"
               onClick={() => handleSelect(prediction)}
-              className="w-full px-4 py-3 flex items-start gap-3 hover:bg-cream-50 transition-colors text-left"
+              className="w-full px-4 py-3 flex items-start gap-3 hover:bg-ivory transition-colors text-left"
             >
-              <MapPin className="h-4 w-4 text-carbon-400 mt-0.5 flex-shrink-0" />
+              <MapPin className="h-4 w-4 text-charcoal-light mt-0.5 flex-shrink-0" />
               <div className="min-w-0">
-                <p className="text-sm text-carbon-900 font-medium truncate">
+                <p className="text-sm text-charcoal-dark font-medium truncate">
                   {prediction.structured_formatting.main_text}
                 </p>
-                <p className="text-xs text-carbon-500 truncate">
+                <p className="text-xs text-charcoal truncate">
                   {prediction.structured_formatting.secondary_text}
                 </p>
               </div>
