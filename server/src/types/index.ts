@@ -1,4 +1,6 @@
-import { Request } from 'express';
+import { Request as ExpressRequest } from 'express';
+import { ParamsDictionary } from 'express-serve-static-core';
+import { ParsedQs } from 'qs';
 import { Document, Types } from 'mongoose';
 
 // User Role
@@ -291,8 +293,7 @@ export interface IRide extends Document {
 }
 
 // Extended Request with user
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface AuthRequest extends Request {
+export interface AuthRequest extends ExpressRequest<ParamsDictionary, unknown, unknown, ParsedQs> {
   user?: IUser;
 }
 
