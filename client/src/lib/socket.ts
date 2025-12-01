@@ -1,112 +1,186 @@
-import { io, Socket } from 'socket.io-client';
+const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'ws://localhost:5000';
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000';
+let socket: WebSocket | null = null;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 5;
+const RECONNECT_DELAY = 3000;
+let currentToken: string | null = null;
 
-let socket: Socket | null = null;
+type EventCallback = (data: unknown) => void;
+const eventListeners = new Map<string, Set<EventCallback>>();
 
-export const initSocket = (token: string): Socket => {
-  if (socket) {
-    socket.disconnect();
+const getWebSocketUrl = (token: string): string => {
+  const baseUrl = SOCKET_URL.replace(/^http/, 'ws');
+  return `${baseUrl}?token=${encodeURIComponent(token)}`;
+};
+
+const handleMessage = (event: MessageEvent): void => {
+  try {
+    const message = JSON.parse(event.data);
+    const { event: eventName, data } = message;
+
+    const listeners = eventListeners.get(eventName);
+    if (listeners) {
+      listeners.forEach((callback) => callback(data));
+    }
+  } catch (error) {
+    console.error('Error parsing WebSocket message:', error);
+  }
+};
+
+const attemptReconnect = (): void => {
+  if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+    console.error('Max reconnection attempts reached');
+    return;
   }
 
-  socket = io(SOCKET_URL, {
-    auth: { token },
-    transports: ['websocket', 'polling'],
-  });
+  if (!currentToken) {
+    console.error('No token available for reconnection');
+    return;
+  }
 
-  socket.on('connect', () => {
+  reconnectAttempts++;
+  console.log(`Attempting to reconnect (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})...`);
+
+  setTimeout(() => {
+    if (currentToken) {
+      initSocket(currentToken);
+    }
+  }, RECONNECT_DELAY);
+};
+
+export const initSocket = (token: string): WebSocket => {
+  if (socket && socket.readyState === WebSocket.OPEN) {
+    socket.close();
+  }
+
+  currentToken = token;
+  reconnectAttempts = 0;
+
+  socket = new WebSocket(getWebSocketUrl(token));
+
+  socket.onopen = () => {
     console.log('Socket connected');
-  });
+    reconnectAttempts = 0;
+  };
 
-  socket.on('disconnect', () => {
-    console.log('Socket disconnected');
-  });
+  socket.onclose = (event) => {
+    console.log('Socket disconnected', event.code, event.reason);
+    if (event.code !== 1000 && event.code !== 4001) {
+      attemptReconnect();
+    }
+  };
 
-  socket.on('connect_error', (error) => {
+  socket.onerror = (error) => {
     console.error('Socket connection error:', error);
-  });
+  };
+
+  socket.onmessage = handleMessage;
 
   return socket;
 };
 
-export const getSocket = (): Socket | null => socket;
+export const getSocket = (): WebSocket | null => socket;
 
 export const disconnectSocket = (): void => {
   if (socket) {
-    socket.disconnect();
+    currentToken = null;
+    socket.close(1000, 'Client disconnect');
     socket = null;
+  }
+  eventListeners.clear();
+};
+
+const emit = (event: string, data?: unknown): void => {
+  if (socket && socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify({ event, data }));
+  }
+};
+
+const on = (event: string, callback: EventCallback): void => {
+  if (!eventListeners.has(event)) {
+    eventListeners.set(event, new Set());
+  }
+  eventListeners.get(event)!.add(callback);
+};
+
+const off = (event: string, callback?: EventCallback): void => {
+  if (callback) {
+    eventListeners.get(event)?.delete(callback);
+  } else {
+    eventListeners.delete(event);
   }
 };
 
 // Cluster events
 export const joinClusterRoom = (clusterId: string): void => {
-  socket?.emit('join:cluster', clusterId);
+  emit('join:cluster', clusterId);
 };
 
 export const leaveClusterRoom = (clusterId: string): void => {
-  socket?.emit('leave:cluster', clusterId);
+  emit('leave:cluster', clusterId);
 };
 
 // Vendor events
 export const joinVendorRoom = (vendorId: string): void => {
-  socket?.emit('join:vendor', vendorId);
+  emit('join:vendor', vendorId);
 };
 
 // Rider events
 export const joinRiderRoom = (riderId: string): void => {
-  socket?.emit('join:rider', riderId);
+  emit('join:rider', riderId);
 };
 
 export const updateRiderLocation = (latitude: number, longitude: number): void => {
-  socket?.emit('location:update', { latitude, longitude });
+  emit('location:update', { latitude, longitude });
 };
 
 // Event listeners
 export const onClusterUpdated = (callback: (data: unknown) => void): void => {
-  socket?.on('cluster:updated', callback);
+  on('cluster:updated', callback);
 };
 
 export const onMemberJoined = (callback: (data: unknown) => void): void => {
-  socket?.on('cluster:member:joined', callback);
+  on('cluster:member:joined', callback);
 };
 
 export const onMemberLeft = (callback: (data: unknown) => void): void => {
-  socket?.on('cluster:member:left', callback);
+  on('cluster:member:left', callback);
 };
 
 export const onOrderStatus = (callback: (data: { orderId: string; status: string }) => void): void => {
-  socket?.on('order:status', callback);
+  on('order:status', callback as EventCallback);
 };
 
 export const onNewOrder = (callback: (data: unknown) => void): void => {
-  socket?.on('order:new', callback);
+  on('order:new', callback);
 };
 
 export const onDeliveryStarted = (callback: (data: { riderId: string }) => void): void => {
-  socket?.on('delivery:started', callback);
+  on('delivery:started', callback as EventCallback);
 };
 
 export const onDeliveryAssigned = (callback: (data: unknown) => void): void => {
-  socket?.on('delivery:assigned', callback);
+  on('delivery:assigned', callback);
 };
 
 export const onRiderLocation = (riderId: string, callback: (data: { latitude: number; longitude: number }) => void): void => {
-  socket?.on(`rider:location:${riderId}`, callback);
+  on(`rider:location:${riderId}`, callback as EventCallback);
 };
 
 // Remove listeners
 export const offClusterUpdated = (): void => {
-  socket?.off('cluster:updated');
+  off('cluster:updated');
 };
 
 export const offMemberJoined = (): void => {
-  socket?.off('cluster:member:joined');
+  off('cluster:member:joined');
 };
 
 export const offMemberLeft = (): void => {
-  socket?.off('cluster:member:left');
+  off('cluster:member:left');
 };
 
 export const offOrderStatus = (): void => {
-  socket?.off('order:status');
+  off('order:status');
 };

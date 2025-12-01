@@ -1,5 +1,5 @@
-import { Server as HttpServer } from 'http';
-import { Server, Socket } from 'socket.io';
+import { Server as HttpServer, IncomingMessage } from 'http';
+import { WebSocketServer, WebSocket } from 'ws';
 import jwt from 'jsonwebtoken';
 import config from '../config/index.js';
 
@@ -8,112 +8,224 @@ interface SocketUser {
   role: string;
 }
 
-interface AuthenticatedSocket extends Socket {
+interface AuthenticatedWebSocket extends WebSocket {
   user?: SocketUser;
+  isAlive?: boolean;
+  rooms: Set<string>;
 }
 
-let io: Server | null = null;
+interface WebSocketMessage {
+  event: string;
+  data?: unknown;
+}
 
-export const initializeSocket = (server: HttpServer): Server => {
-  io = new Server(server, {
-    cors: {
-      origin: config.clientUrl,
-      methods: ['GET', 'POST'],
-      credentials: true,
-    },
-  });
+let wss: WebSocketServer | null = null;
+const clients = new Map<string, Set<AuthenticatedWebSocket>>();
 
-  // Authentication middleware
-  io.use((socket: AuthenticatedSocket, next) => {
-    const token = socket.handshake.auth.token;
-
-    if (!token) {
-      return next(new Error('Authentication required'));
-    }
-
-    try {
-      const decoded = jwt.verify(token, config.jwt.secret) as { userId: string; role: string };
-      socket.user = { id: decoded.userId, role: decoded.role };
-      next();
-    } catch {
-      next(new Error('Invalid token'));
-    }
-  });
-
-  io.on('connection', (socket: AuthenticatedSocket) => {
-    console.log(`User connected: ${socket.user?.id}`);
-
-    // Join user to their personal room
-    if (socket.user) {
-      socket.join(`user:${socket.user.id}`);
-    }
-
-    // Join cluster room
-    socket.on('join:cluster', (clusterId: string) => {
-      socket.join(`cluster:${clusterId}`);
-      console.log(`User ${socket.user?.id} joined cluster ${clusterId}`);
-    });
-
-    // Leave cluster room
-    socket.on('leave:cluster', (clusterId: string) => {
-      socket.leave(`cluster:${clusterId}`);
-      console.log(`User ${socket.user?.id} left cluster ${clusterId}`);
-    });
-
-    // Join vendor room
-    socket.on('join:vendor', (vendorId: string) => {
-      if (socket.user?.role === 'vendor') {
-        socket.join(`vendor:${vendorId}`);
-      }
-    });
-
-    // Join rider room
-    socket.on('join:rider', (riderId: string) => {
-      if (socket.user?.role === 'rider') {
-        socket.join(`rider:${riderId}`);
-      }
-    });
-
-    // Location update from rider
-    socket.on('location:update', (data: { latitude: number; longitude: number }) => {
-      if (socket.user?.role === 'rider') {
-        io?.emit(`rider:location:${socket.user.id}`, {
-          riderId: socket.user.id,
-          ...data,
-        });
-      }
-    });
-
-    socket.on('disconnect', () => {
-      console.log(`User disconnected: ${socket.user?.id}`);
-    });
-  });
-
-  return io;
+const getTokenFromRequest = (request: IncomingMessage): string | null => {
+  const url = new URL(request.url || '', `http://${request.headers.host}`);
+  return url.searchParams.get('token');
 };
 
-export const getIO = (): Server => {
-  if (!io) {
-    throw new Error('Socket.io not initialized');
+const authenticateConnection = (request: IncomingMessage): SocketUser | null => {
+  const token = getTokenFromRequest(request);
+
+  if (!token) {
+    return null;
   }
-  return io;
+
+  try {
+    const decoded = jwt.verify(token, config.jwt.secret) as { userId: string; role: string };
+    return { id: decoded.userId, role: decoded.role };
+  } catch {
+    return null;
+  }
+};
+
+const addToRoom = (ws: AuthenticatedWebSocket, room: string): void => {
+  ws.rooms.add(room);
+  if (!clients.has(room)) {
+    clients.set(room, new Set());
+  }
+  clients.get(room)!.add(ws);
+};
+
+const removeFromRoom = (ws: AuthenticatedWebSocket, room: string): void => {
+  ws.rooms.delete(room);
+  const roomClients = clients.get(room);
+  if (roomClients) {
+    roomClients.delete(ws);
+    if (roomClients.size === 0) {
+      clients.delete(room);
+    }
+  }
+};
+
+const removeFromAllRooms = (ws: AuthenticatedWebSocket): void => {
+  ws.rooms.forEach((room) => {
+    removeFromRoom(ws, room);
+  });
+};
+
+const sendMessage = (ws: AuthenticatedWebSocket, event: string, data: unknown): void => {
+  if (ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ event, data }));
+  }
+};
+
+const broadcastToRoom = (room: string, event: string, data: unknown): void => {
+  const roomClients = clients.get(room);
+  if (roomClients) {
+    const message = JSON.stringify({ event, data });
+    roomClients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(message);
+      }
+    });
+  }
+};
+
+export const initializeSocket = (server: HttpServer): WebSocketServer => {
+  wss = new WebSocketServer({ server });
+
+  // Heartbeat to detect broken connections
+  const interval = setInterval(() => {
+    wss?.clients.forEach((ws) => {
+      const client = ws as AuthenticatedWebSocket;
+      if (client.isAlive === false) {
+        removeFromAllRooms(client);
+        return client.terminate();
+      }
+      client.isAlive = false;
+      client.ping();
+    });
+  }, 30000);
+
+  wss.on('close', () => {
+    clearInterval(interval);
+  });
+
+  wss.on('connection', (ws: AuthenticatedWebSocket, request: IncomingMessage) => {
+    const user = authenticateConnection(request);
+
+    if (!user) {
+      ws.close(4001, 'Authentication required');
+      return;
+    }
+
+    ws.user = user;
+    ws.isAlive = true;
+    ws.rooms = new Set();
+
+    console.log(`User connected: ${user.id}`);
+
+    // Join user to their personal room
+    addToRoom(ws, `user:${user.id}`);
+
+    ws.on('pong', () => {
+      ws.isAlive = true;
+    });
+
+    ws.on('message', (rawMessage: Buffer) => {
+      try {
+        const message: WebSocketMessage = JSON.parse(rawMessage.toString());
+        const { event, data } = message;
+
+        switch (event) {
+          case 'join:cluster': {
+            const clusterId = data as string;
+            addToRoom(ws, `cluster:${clusterId}`);
+            console.log(`User ${ws.user?.id} joined cluster ${clusterId}`);
+            break;
+          }
+
+          case 'leave:cluster': {
+            const clusterId = data as string;
+            removeFromRoom(ws, `cluster:${clusterId}`);
+            console.log(`User ${ws.user?.id} left cluster ${clusterId}`);
+            break;
+          }
+
+          case 'join:vendor': {
+            const vendorId = data as string;
+            if (ws.user?.role === 'vendor') {
+              addToRoom(ws, `vendor:${vendorId}`);
+            }
+            break;
+          }
+
+          case 'join:rider': {
+            const riderId = data as string;
+            if (ws.user?.role === 'rider') {
+              addToRoom(ws, `rider:${riderId}`);
+            }
+            break;
+          }
+
+          case 'location:update': {
+            if (ws.user?.role === 'rider') {
+              const locationData = data as { latitude: number; longitude: number };
+              // Broadcast to all connected clients
+              broadcastToAll(`rider:location:${ws.user.id}`, {
+                riderId: ws.user.id,
+                ...locationData,
+              });
+            }
+            break;
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error);
+      }
+    });
+
+    ws.on('close', () => {
+      console.log(`User disconnected: ${ws.user?.id}`);
+      removeFromAllRooms(ws);
+    });
+
+    ws.on('error', (error) => {
+      console.error('WebSocket error:', error);
+      removeFromAllRooms(ws);
+    });
+  });
+
+  return wss;
+};
+
+export const getWSS = (): WebSocketServer => {
+  if (!wss) {
+    throw new Error('WebSocket server not initialized');
+  }
+  return wss;
+};
+
+// Broadcast to all connected clients
+const broadcastToAll = (event: string, data: unknown): void => {
+  if (!wss) return;
+  const message = JSON.stringify({ event, data });
+  wss.clients.forEach((client) => {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(message);
+    }
+  });
 };
 
 // Emit events
 export const emitToUser = (userId: string, event: string, data: unknown): void => {
-  io?.to(`user:${userId}`).emit(event, data);
+  broadcastToRoom(`user:${userId}`, event, data);
 };
 
 export const emitToCluster = (clusterId: string, event: string, data: unknown): void => {
-  io?.to(`cluster:${clusterId}`).emit(event, data);
+  broadcastToRoom(`cluster:${clusterId}`, event, data);
 };
 
 export const emitToVendor = (vendorId: string, event: string, data: unknown): void => {
-  io?.to(`vendor:${vendorId}`).emit(event, data);
+  broadcastToRoom(`vendor:${vendorId}`, event, data);
 };
 
 export const emitToRider = (riderId: string, event: string, data: unknown): void => {
-  io?.to(`rider:${riderId}`).emit(event, data);
+  broadcastToRoom(`rider:${riderId}`, event, data);
 };
 
 // Cluster events

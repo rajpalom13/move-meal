@@ -14,13 +14,18 @@ const app = express();
 const httpServer = createServer(app);
 
 // Trust proxy for Heroku/reverse proxy deployments
-app.set('trust proxy', 1);
+app.set("trust proxy", 1);
 
 // Initialize socket.io
 initializeSocket(httpServer);
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: "*",
+    credentials: true,
+  })
+);
 
 app.use(morgan("dev"));
 
